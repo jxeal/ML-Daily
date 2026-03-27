@@ -1,0 +1,116 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: 'Manrope', sans-serif;
+  --font-display: 'Bricolage Grotesque', sans-serif;
+
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-success: hsl(var(--success));
+  --color-success-foreground: hsl(var(--success-foreground));
+  --color-warning: hsl(var(--warning));
+  --color-warning-foreground: hsl(var(--warning-foreground));
+}
+
+:root {
+  /* Enforce dark mode purely for this app as requested */
+  --background: 240 10% 4%; /* #09090b */
+  --foreground: 0 0% 98%;
+
+  --card: 240 10% 8%; /* Slightly lighter than bg */
+  --card-foreground: 0 0% 98%;
+
+  --popover: 240 10% 8%;
+  --popover-foreground: 0 0% 98%;
+
+  /* Vibrant tech green for ML vibe */
+  --primary: 142 71% 45%; 
+  --primary-foreground: 144 100% 11%;
+
+  --secondary: 240 10% 15%;
+  --secondary-foreground: 0 0% 98%;
+
+  --muted: 240 10% 15%;
+  --muted-foreground: 240 5% 65%;
+
+  --accent: 280 80% 60%; /* Deep electric purple */
+  --accent-foreground: 0 0% 98%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+
+  --success: 142 71% 45%;
+  --success-foreground: 144 100% 11%;
+
+  --warning: 38 92% 50%;
+  --warning-foreground: 48 96% 11%;
+
+  --border: 240 10% 20%;
+  --input: 240 10% 20%;
+  --ring: 142 71% 45%;
+  
+  --radius: 1rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    @apply bg-background text-foreground antialiased font-sans;
+    color-scheme: dark;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    /* Prevent pull-to-refresh highlighting and overflow bouncing on mobile */
+    overscroll-behavior-y: none;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    @apply font-bold tracking-tight;
+  }
+}
+
+/* Custom Scrollbar for sleekness */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-muted rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-muted-foreground;
+}
+
+/* Utilities for visual flair */
+.glass-panel {
+  @apply bg-card/60 backdrop-blur-xl border border-white/5;
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-emerald-300;
+}

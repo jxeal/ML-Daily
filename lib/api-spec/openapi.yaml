@@ -1,15 +1,18 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: ML Daily API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: lessons
+    description: Lesson operations
+  - name: user
+    description: User data operations
 paths:
   /healthz:
     get:
@@ -24,6 +27,71 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /lessons:
+    get:
+      operationId: getLessons
+      tags: [lessons]
+      summary: Get all lessons
+      description: Returns all ML lessons
+      responses:
+        "200":
+          description: List of lessons
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Lesson"
+  /lessons/{id}:
+    get:
+      operationId: getLessonById
+      tags: [lessons]
+      summary: Get lesson by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lesson
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lesson"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /categories:
+    get:
+      operationId: getCategories
+      tags: [lessons]
+      summary: Get all categories
+      responses:
+        "200":
+          description: List of categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+  /daily-challenge:
+    get:
+      operationId: getDailyChallenge
+      tags: [lessons]
+      summary: Get today's daily challenge
+      responses:
+        "200":
+          description: Daily challenge
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyChallenge"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +101,120 @@ components:
           type: string
       required:
         - status
-
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+    QuizOption:
+      type: object
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+      required:
+        - id
+        - text
+    QuizQuestion:
+      type: object
+      properties:
+        question:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuizOption"
+        answer:
+          type: string
+      required:
+        - question
+        - options
+        - answer
+    Lesson:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        category:
+          type: string
+        difficulty:
+          type: string
+          enum: [Beginner, Intermediate, Advanced]
+        shortDescription:
+          type: string
+        content:
+          type: string
+        examples:
+          type: array
+          items:
+            type: string
+        quiz:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuizQuestion"
+        icon:
+          type: string
+      required:
+        - id
+        - title
+        - category
+        - difficulty
+        - shortDescription
+        - content
+        - examples
+        - quiz
+        - icon
+    Category:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+        lessonCount:
+          type: integer
+      required:
+        - id
+        - name
+        - description
+        - icon
+        - color
+        - lessonCount
+    DailyChallenge:
+      type: object
+      properties:
+        id:
+          type: string
+        date:
+          type: string
+        question:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuizOption"
+        answer:
+          type: string
+        explanation:
+          type: string
+        xpReward:
+          type: integer
+      required:
+        - id
+        - date
+        - question
+        - options
+        - answer
+        - explanation
+        - xpReward

@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "ML Daily"
+version = "1.0.0"
+id = "artifacts/ml-daily"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25774
+
+[services.development]
+run = "pnpm --filter @workspace/ml-daily run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ml-daily", "run", "build" ]
+publicDir = "artifacts/ml-daily/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25774"
+BASE_PATH = "/"
