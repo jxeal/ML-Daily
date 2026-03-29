@@ -3,7 +3,10 @@
   "compilerOptions": {
     "outDir": "dist",
     "rootDir": "src",
-    "types": ["node"]
+    "types": ["node"],
+    "declaration": true,      // Required for project references
+    "emitDeclarationOnly": false, 
+    "noEmit": false           // Ensure this isn't inherited as 'true'
   },
   "include": ["src"],
   "references": [
