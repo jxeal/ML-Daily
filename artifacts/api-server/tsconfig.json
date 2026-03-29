@@ -6,7 +6,9 @@
     "types": ["node"],
     "declaration": true,      // Required for project references
     "emitDeclarationOnly": false, 
-    "noEmit": false           // Ensure this isn't inherited as 'true'
+    "noEmit": false,           // Ensure this isn't inherited as 'true'          
+    "skipLibCheck": true,      
+    "isolatedModules": true
   },
   "include": ["src"],
   "references": [
