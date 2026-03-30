@@ -1,16 +1,53 @@
 import { AppLayout } from "@/components/layout/app-layout";
 import { useStatsStore } from "@/store/use-stats";
-import { Award, Flame, User as UserIcon, Zap, BookOpen, Share2 } from "lucide-react";
+import { useUserStats } from "@/hooks/use-supabase";
+import { useAuth } from "@/components/auth/auth-provider";
+import { Award, Flame, User as UserIcon, Zap, BookOpen, Share2, LogOut, LogIn, Settings } from "lucide-react";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
 
 export default function Profile() {
-  const stats = useStatsStore();
+  const { user, signOut, loading: authLoading } = useAuth();
+  const [, setLocation] = useLocation();
+  const { data: supabaseStats, isLoading: statsLoading } = useUserStats();
+  const localStats = useStatsStore();
+
+  const isLoading = authLoading || statsLoading;
+
+  // Use Supabase stats if logged in, otherwise use local store
+  const stats = user ? {
+    streak: supabaseStats?.streak || 0,
+    xp: supabaseStats?.xp || 0,
+    badges: supabaseStats?.badges || [],
+  } : localStats;
 
   const getBadgeIcon = (badge: string) => {
     if (badge.includes('Streak')) return <Flame className="w-6 h-6 text-orange-500" />;
     if (badge.includes('Learner')) return <BookOpen className="w-6 h-6 text-blue-500" />;
     return <Award className="w-6 h-6 text-accent" />;
   };
+
+  if (!user && !authLoading) {
+    return (
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center space-y-6">
+          <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center text-primary">
+            <UserIcon className="w-10 h-10" />
+          </div>
+          <div className="max-w-md space-y-2">
+            <h1 className="text-3xl font-display font-bold">Your Profile</h1>
+            <p className="text-muted-foreground">
+              Sign in to see your achievements, track your learning streak, and customize your profile.
+            </p>
+          </div>
+          <Button size="lg" className="rounded-2xl px-8" onClick={() => setLocation("/auth")}>
+            <LogIn className="w-4 h-4 mr-2" /> Sign In / Sign Up
+          </Button>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
@@ -19,11 +56,17 @@ export default function Profile() {
         {/* Profile Header */}
         <section className="flex flex-col items-center text-center mt-6">
           <div className="w-24 h-24 rounded-full bg-gradient-to-tr from-accent to-primary p-1 mb-4">
-            <div className="w-full h-full bg-card rounded-full flex items-center justify-center">
-              <UserIcon className="w-10 h-10 text-muted-foreground" />
+            <div className="w-full h-full bg-card rounded-full flex items-center justify-center overflow-hidden">
+              {user?.user_metadata?.avatar_url ? (
+                <img src={user.user_metadata.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <UserIcon className="w-10 h-10 text-muted-foreground" />
+              )}
             </div>
           </div>
-          <h1 className="text-3xl font-display font-bold mb-1">ML Explorer</h1>
+          <h1 className="text-3xl font-display font-bold mb-1">
+            {user?.user_metadata?.full_name || user?.email?.split('@')[0] || "ML Explorer"}
+          </h1>
           <p className="text-muted-foreground flex items-center gap-1">
             <Zap className="w-4 h-4 text-warning fill-warning" />
             Level {Math.floor(stats.xp / 100) + 1} Scholar
@@ -83,11 +126,26 @@ export default function Profile() {
           </div>
         </section>
 
-        {/* Share Action */}
-        <button className="w-full bg-card hover:bg-secondary border border-white/5 text-foreground font-bold py-4 rounded-2xl transition-colors flex items-center justify-center gap-2">
-          <Share2 className="w-5 h-5" />
-          Share Profile
-        </button>
+        {/* Actions */}
+        <div className="space-y-3">
+          <button className="w-full bg-card hover:bg-secondary border border-white/5 text-foreground font-bold py-4 rounded-2xl transition-colors flex items-center justify-center gap-2">
+            <Share2 className="w-5 h-5" />
+            Share Profile
+          </button>
+          
+          <button className="w-full bg-card hover:bg-secondary border border-white/5 text-foreground font-bold py-4 rounded-2xl transition-colors flex items-center justify-center gap-2">
+            <Settings className="w-5 h-5" />
+            Account Settings
+          </button>
+
+          <button 
+            onClick={() => signOut()}
+            className="w-full bg-destructive/10 hover:bg-destructive/20 border border-destructive/20 text-destructive font-bold py-4 rounded-2xl transition-colors flex items-center justify-center gap-2"
+          >
+            <LogOut className="w-5 h-5" />
+            Logout
+          </button>
+        </div>
 
       </div>
     </AppLayout>

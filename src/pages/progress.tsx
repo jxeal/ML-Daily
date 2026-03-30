@@ -1,16 +1,73 @@
 import { AppLayout } from "@/components/layout/app-layout";
 import { useStatsStore } from "@/store/use-stats";
-import { useGetLessons } from "@/hooks/use-supabase";
-import { CheckCircle2, Shield, Target } from "lucide-react";
+import { useGetLessons, useUserStats, useGetCategories } from "@/hooks/use-supabase";
+import { useAuth } from "@/components/auth/auth-provider";
+import { CheckCircle2, Shield, Target, Lock, LogIn, BarChart } from "lucide-react";
 import { motion } from "framer-motion";
+import { Button } from "@/components/ui/button";
+import { useLocation } from "wouter";
+import { 
+  BarChart as ReBarChart, 
+  Bar, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  Cell
+} from "recharts";
 
 export default function Progress() {
-  const { data: lessons, isLoading } = useGetLessons();
-  const completedIds = useStatsStore(state => state.completedLessons);
+  const { user, loading: authLoading } = useAuth();
+  const [, setLocation] = useLocation();
+  const { data: lessons, isLoading: lessonsLoading } = useGetLessons();
+  const { data: categories, isLoading: categoriesLoading } = useGetCategories();
+  const { data: supabaseStats, isLoading: statsLoading } = useUserStats();
+  const localCompletedIds = useStatsStore(state => state.completedLessons);
   
-  const total = lessons?.length || 1; // avoid /0
+  const isLoading = lessonsLoading || statsLoading || authLoading || categoriesLoading;
+
+  // Use Supabase stats if logged in, otherwise use local store
+  const completedIds = user ? (supabaseStats?.completed_lessons || []) : localCompletedIds;
+  const xp = user ? (supabaseStats?.xp || 0) : useStatsStore.getState().xp;
+  const streak = user ? (supabaseStats?.streak || 0) : useStatsStore.getState().streak;
+  
+  const total = lessons?.length || 1;
   const completedCount = completedIds.length;
   const percent = Math.round((completedCount / total) * 100) || 0;
+
+  // Calculate mastery by category
+  const masteryData = categories?.map(cat => {
+    const catLessons = lessons?.filter(l => l.category === cat.name) || [];
+    const catCompleted = catLessons.filter(l => completedIds.includes(l.id)).length;
+    const catPercent = catLessons.length > 0 ? Math.round((catCompleted / catLessons.length) * 100) : 0;
+    return {
+      name: cat.name,
+      percent: catPercent,
+      color: cat.color || "#a855f7"
+    };
+  }) || [];
+
+  if (!user && !authLoading) {
+    return (
+      <AppLayout>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] px-4 text-center space-y-6">
+          <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center text-primary">
+            <Lock className="w-10 h-10" />
+          </div>
+          <div className="max-w-md space-y-2">
+            <h1 className="text-3xl font-display font-bold">Sign in to track progress</h1>
+            <p className="text-muted-foreground">
+              Create an account to sync your learning journey across devices and compete on the leaderboard.
+            </p>
+          </div>
+          <Button size="lg" className="rounded-2xl px-8" onClick={() => setLocation("/auth")}>
+            <LogIn className="w-4 h-4 mr-2" /> Sign In / Sign Up
+          </Button>
+        </div>
+      </AppLayout>
+    );
+  }
 
   return (
     <AppLayout>
@@ -56,15 +113,52 @@ export default function Progress() {
               <p className="text-muted-foreground mb-4">
                 You've completed <span className="text-foreground font-bold">{completedCount}</span> out of {total} lessons.
               </p>
-              <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+              <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                 <div className="bg-emerald-500/10 text-emerald-400 px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4" /> {completedCount} Done
                 </div>
-                <div className="bg-secondary text-muted-foreground px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1.5">
-                  <Target className="w-4 h-4" /> {total - completedCount} Remaining
+                <div className="bg-primary/10 text-primary px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1.5">
+                  <Shield className="w-4 h-4" /> {xp} XP
+                </div>
+                <div className="bg-orange-500/10 text-orange-400 px-3 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-1.5">
+                  🔥 {streak} Day Streak
                 </div>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Mastery Chart */}
+        <section className="bg-card border border-white/5 rounded-3xl p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <BarChart className="w-5 h-5 text-primary" />
+            <h2 className="text-xl font-display font-bold">Mastery by Category</h2>
+          </div>
+          
+          <div className="h-[250px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <ReBarChart data={masteryData} layout="vertical" margin={{ left: 0, right: 30 }}>
+                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
+                <XAxis type="number" hide domain={[0, 100]} />
+                <YAxis 
+                  dataKey="name" 
+                  type="category" 
+                  width={100} 
+                  axisLine={false} 
+                  tickLine={false}
+                  tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 500 }}
+                />
+                <Tooltip 
+                  cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                  contentStyle={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                />
+                <Bar dataKey="percent" radius={[0, 4, 4, 0]} barSize={20}>
+                  {masteryData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} />
+                  ))}
+                </Bar>
+              </ReBarChart>
+            </ResponsiveContainer>
           </div>
         </section>
 

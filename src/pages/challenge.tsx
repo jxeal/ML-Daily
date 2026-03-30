@@ -1,13 +1,18 @@
 import { useRoute, Link } from "wouter";
-import { useGetDailyChallenge } from "@/hooks/use-supabase";
+import { useGetDailyChallenge, useUserStats, useUpdateUserStats } from "@/hooks/use-supabase";
 import { ArrowLeft, Loader2, Zap } from "lucide-react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { useState } from "react";
 import { useStatsStore } from "@/store/use-stats";
 import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/components/auth/auth-provider";
+import { format } from "date-fns";
 
 export default function DailyChallenge() {
+  const { user } = useAuth();
+  const { data: supabaseStats } = useUserStats();
+  const updateStats = useUpdateUserStats();
   const [, params] = useRoute("/challenge/:id");
   const { data: challenge, isLoading } = useGetDailyChallenge();
   
@@ -36,6 +41,18 @@ export default function DailyChallenge() {
     setIsSubmitted(true);
     if (isCorrect) {
       completeDailyChallenge(challenge.xpReward);
+      
+      // Sync to Supabase if logged in
+      if (user && supabaseStats) {
+        const todayStr = format(new Date(), 'yyyy-MM-dd');
+        if (supabaseStats.daily_challenge_done !== todayStr) {
+          updateStats.mutate({ 
+            daily_challenge_done: todayStr, 
+            xp: supabaseStats.xp + challenge.xpReward 
+          });
+        }
+      }
+
       setIsSuccess(true);
       confetti({
         particleCount: 200,

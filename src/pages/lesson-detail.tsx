@@ -70,7 +70,7 @@ export default function LessonDetail() {
             {lesson.title}
           </h1>
           <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed">
-            {lesson.shortDescription}
+            {lesson.short_description}
           </p>
         </div>
 

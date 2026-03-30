@@ -50,7 +50,7 @@ export default function Categories() {
 
                     <div className="flex items-center justify-between mt-auto relative z-10">
                       <span className="text-xs font-semibold text-muted-foreground bg-secondary px-3 py-1.5 rounded-lg">
-                        {cat.lessonCount} Lessons
+                        {cat.lesson_count} Lessons
                       </span>
                       <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                         <ArrowRight className="w-4 h-4" />

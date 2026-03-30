@@ -34,3 +34,14 @@ export interface DailyChallenge {
   explanation: string;
   xpReward: number; // In DB it's xp_reward
 }
+
+export interface UserStats {
+  id: string;
+  streak: number;
+  last_visit: string | null;
+  completed_lessons: string[];
+  xp: number;
+  daily_challenge_done: string | null;
+  badges: string[];
+  updated_at?: string;
+}

@@ -3,10 +3,17 @@ import { ArrowRight, CheckCircle2, PlayCircle } from "lucide-react";
 import { type Lesson } from "@/types/database";
 import { useStatsStore } from "@/store/use-stats";
 import { motion } from "framer-motion";
+import { useAuth } from "@/components/auth/auth-provider";
+import { useUserStats } from "@/hooks/use-supabase";
 
 export function LessonCard({ lesson, index = 0 }: { lesson: Lesson, index?: number }) {
-  const completedLessons = useStatsStore(state => state.completedLessons);
-  const isCompleted = completedLessons.includes(lesson.id);
+  const { user } = useAuth();
+  const { data: supabaseStats } = useUserStats();
+  const localCompletedLessons = useStatsStore(state => state.completedLessons);
+  
+  const isCompleted = user 
+    ? supabaseStats?.completed_lessons?.includes(lesson.id) 
+    : localCompletedLessons.includes(lesson.id);
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
@@ -51,7 +58,7 @@ export function LessonCard({ lesson, index = 0 }: { lesson: Lesson, index?: numb
               {lesson.title}
             </h3>
             <p className="text-muted-foreground text-sm line-clamp-2 mb-6">
-              {lesson.shortDescription}
+              {lesson.short_description}
             </p>
           </div>
 

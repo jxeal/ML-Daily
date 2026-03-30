@@ -5,6 +5,8 @@ import confetti from 'canvas-confetti';
 import { useStatsStore } from '@/store/use-stats';
 import { useLocation } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/components/auth/auth-provider';
+import { useUpdateUserStats, useUserStats } from '@/hooks/use-supabase';
 
 interface QuizSectionProps {
   lessonId: string;
@@ -12,6 +14,9 @@ interface QuizSectionProps {
 }
 
 export function QuizSection({ lessonId, quiz }: QuizSectionProps) {
+  const { user } = useAuth();
+  const { data: supabaseStats } = useUserStats();
+  const updateStats = useUpdateUserStats();
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -37,6 +42,14 @@ export function QuizSection({ lessonId, quiz }: QuizSectionProps) {
     } else {
       // Finished all questions
       completeLesson(lessonId);
+      
+      // Sync to Supabase if logged in
+      if (user && supabaseStats) {
+        const completedLessons = Array.from(new Set([...supabaseStats.completed_lessons, lessonId]));
+        const xp = supabaseStats.xp + 10;
+        updateStats.mutate({ completed_lessons: completedLessons, xp });
+      }
+
       setIsFinished(true);
       confetti({
         particleCount: 150,

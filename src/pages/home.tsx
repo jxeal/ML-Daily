@@ -1,23 +1,37 @@
 import { AppLayout } from "@/components/layout/app-layout";
 import { LessonCard } from "@/components/ui/lesson-card";
-import { useGetLessons, useGetDailyChallenge } from "@/hooks/use-supabase";
+import { useGetLessons, useGetDailyChallenge, useUserStats } from "@/hooks/use-supabase";
 import { Sparkles, Trophy, Loader2, Zap } from "lucide-react";
 import { Link } from "wouter";
 import { useStatsStore } from "@/store/use-stats";
 import { format } from "date-fns";
+import { useAuth } from "@/components/auth/auth-provider";
 
 export default function Home() {
+  const { user } = useAuth();
+  const { data: supabaseStats } = useUserStats();
   const { data: lessons, isLoading: isLoadingLessons } = useGetLessons();
   const { data: challenge, isLoading: isLoadingChallenge } = useGetDailyChallenge();
   
   const dailyChallengeDone = useStatsStore(state => state.dailyChallengeDone);
   const todayStr = format(new Date(), 'yyyy-MM-dd');
-  const isChallengeDone = dailyChallengeDone === todayStr;
+  
+  const isChallengeDone = user 
+    ? supabaseStats?.daily_challenge_done === todayStr
+    : dailyChallengeDone === todayStr;
 
   return (
     <AppLayout>
       <div className="px-4 md:px-6 py-4 space-y-8 animate-in fade-in duration-500">
         
+        {/* Welcome Section */}
+        <section className="mb-2">
+          <h1 className="text-3xl font-display font-bold">
+            {user ? `Hello, ${user.user_metadata?.full_name?.split(' ')[0] || 'Learner'}!` : 'Welcome back!'}
+          </h1>
+          <p className="text-muted-foreground mt-1">Ready to learn some Machine Learning today?</p>
+        </section>
+
         {/* Daily Challenge Section */}
         <section>
           <div className="flex items-center gap-2 mb-4">

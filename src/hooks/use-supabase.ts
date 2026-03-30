@@ -1,7 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { Lesson, Category, DailyChallenge } from "@/types/database";
+import { Lesson, Category, DailyChallenge, UserStats } from "@/types/database";
 import { format } from "date-fns";
+import { useAuth } from "@/components/auth/auth-provider";
+import { checkBadges } from "@/lib/utils";
 
 export function useGetLessons() {
   return useQuery<Lesson[]>({
@@ -54,9 +56,11 @@ export function useGetDailyChallenge() {
         .from("daily_challenges")
         .select("*")
         .eq("date", todayStr)
-        .single();
+        .maybeSingle();
       
-      if (error) {
+      if (error) throw error;
+      
+      if (!data) {
         // Fallback to latest challenge if today's is not found
         const { data: latest, error: latestError } = await supabase
           .from("daily_challenges")
@@ -75,6 +79,88 @@ export function useGetDailyChallenge() {
         ...data,
         xpReward: data.xp_reward
       } as DailyChallenge;
+    },
+  });
+}
+
+export function useUserStats() {
+  const { user } = useAuth();
+  return useQuery<UserStats | null>({
+    queryKey: ["user-stats", user?.id],
+    queryFn: async () => {
+      if (!user) return null;
+      const { data, error } = await supabase
+        .from("user_stats")
+        .select("*")
+        .eq("id", user.id)
+        .maybeSingle();
+      
+      if (error) throw error;
+      
+      if (!data) {
+        // Initialize stats if they don't exist
+        const initialStats = {
+          id: user.id,
+          streak: 0,
+          last_visit: null,
+          completed_lessons: [],
+          xp: 0,
+          daily_challenge_done: null,
+          badges: []
+        };
+        const { data: inserted, error: insertError } = await supabase
+          .from("user_stats")
+          .insert(initialStats)
+          .select()
+          .single();
+        if (insertError) throw insertError;
+        return inserted as UserStats;
+      }
+      
+      return data as UserStats;
+    },
+    enabled: !!user,
+  });
+}
+
+export function useUpdateUserStats() {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (updates: Partial<UserStats>) => {
+      if (!user) throw new Error("User not authenticated");
+      
+      // Get current stats to check for badges
+      const { data: current } = await supabase
+        .from("user_stats")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      const newStats = { ...current, ...updates };
+      const newBadges = checkBadges({
+        streak: newStats.streak || 0,
+        xp: newStats.xp || 0,
+        completed_lessons: newStats.completed_lessons || []
+      });
+
+      const finalUpdates = {
+        ...updates,
+        badges: Array.from(new Set([...(current?.badges || []), ...newBadges]))
+      };
+
+      const { data, error } = await supabase
+        .from("user_stats")
+        .update(finalUpdates)
+        .eq("id", user.id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data as UserStats;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-stats", user?.id] });
     },
   });
 }
