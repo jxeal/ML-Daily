@@ -36,6 +36,7 @@ function Router() {
       <Route path="/challenge/:id" component={DailyChallenge} />
       <Route path="/progress" component={Progress} />
       <Route path="/profile" component={Profile} />
+      <Route path="/profile/:username" component={Profile} />
       <Route path="/auth" component={Auth} />
       <Route component={NotFound} />
     </Switch>

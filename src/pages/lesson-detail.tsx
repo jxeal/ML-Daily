@@ -1,6 +1,8 @@
 import { useRoute, Link } from "wouter";
 import { useGetLessonById } from "@/hooks/use-supabase";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import { ArrowLeft, Loader2, BookOpen } from "lucide-react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { QuizSection } from "@/components/ui/quiz-section";
@@ -9,11 +11,7 @@ export default function LessonDetail() {
   const [, params] = useRoute("/lessons/:id");
   const id = params?.id;
 
-  const {
-    data: lesson,
-    isLoading,
-    error,
-  } = useGetLessonById(id || "");
+  const { data: lesson, isLoading, error } = useGetLessonById(id || "");
 
   if (isLoading) {
     return (
@@ -44,7 +42,7 @@ export default function LessonDetail() {
         {/* Header Hero */}
         <div className="relative pt-6 px-4 md:px-8 pb-12 border-b border-white/5 bg-gradient-to-b from-card to-background">
           <Link
-            href={`/categories/${(lesson.category || '').toLowerCase().replace(/\s+/g, '-')}`}
+            href={`/categories/${(lesson.category || "").toLowerCase().replace(/\s+/g, "-")}`}
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -78,7 +76,9 @@ export default function LessonDetail() {
         {/* Content Body */}
         <div className="px-4 md:px-8 py-8 max-w-3xl mx-auto">
           <div className="prose prose-invert prose-emerald max-w-none text-[1.1rem] leading-relaxed text-foreground/90">
-            <ReactMarkdown>{lesson.content}</ReactMarkdown>
+            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+              {lesson.content}
+            </ReactMarkdown>
           </div>
 
           {/* Examples Section */}
@@ -94,7 +94,7 @@ export default function LessonDetail() {
                     key={idx}
                     className="bg-card p-6 rounded-2xl border-l-4 border-accent shadow-sm"
                   >
-                    <p className="font-mono text-sm leading-relaxed text-muted-foreground">
+                    <p className="font-mono text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
                       {ex}
                     </p>
                   </div>

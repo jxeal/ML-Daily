@@ -148,6 +148,9 @@ export function useUserStats() {
           xp: 0,
           daily_challenge_done: null,
           badges: [],
+          username: user.user_metadata?.username || null,
+          full_name: user.user_metadata?.full_name || null,
+          avatar_url: user.user_metadata?.avatar_url || null,
         };
         const { data: inserted, error: insertError } = await supabase
           .from("user_stats")
@@ -161,6 +164,24 @@ export function useUserStats() {
       return data as UserStats;
     },
     enabled: !!user,
+  });
+}
+
+export function useUserProfile(username: string) {
+  return useQuery<UserStats | null>({
+    queryKey: ["user-profile", username],
+    queryFn: async () => {
+      if (!username) return null;
+      const { data, error } = await supabase
+        .from("user_stats")
+        .select("*")
+        .eq("username", username)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data as UserStats;
+    },
+    enabled: !!username,
   });
 }
 

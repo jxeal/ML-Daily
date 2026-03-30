@@ -44,4 +44,7 @@ export interface UserStats {
   daily_challenge_done: string | null;
   badges: string[];
   updated_at?: string;
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
 }
