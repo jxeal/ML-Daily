@@ -14,6 +14,7 @@ import LessonDetail from "@/pages/lesson-detail";
 import Progress from "@/pages/progress";
 import Profile from "@/pages/profile";
 import DailyChallenge from "@/pages/challenge";
+import CategoryDetail from "@/pages/category-detail";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient({
@@ -30,6 +31,7 @@ function Router() {
     <Switch>
       <Route path="/" component={Home} />
       <Route path="/categories" component={Categories} />
+      <Route path="/categories/:id" component={CategoryDetail} />
       <Route path="/lessons/:id" component={LessonDetail} />
       <Route path="/challenge/:id" component={DailyChallenge} />
       <Route path="/progress" component={Progress} />

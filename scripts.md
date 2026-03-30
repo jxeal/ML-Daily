@@ -27,7 +27,18 @@ Use these prompts with an AI (like ChatGPT or Gemini) to generate SQL commands f
 
 ---
 
-## 2. Add a Daily Challenge
+## 2. Update an Existing Lesson
+**Prompt:**
+> Generate a PostgreSQL `UPDATE` command for the `lessons` table.
+> **Target Lesson ID:** [INSERT SLUG HERE, e.g., 'neural-networks']
+> **Change Requested:** [Describe what to add or change, e.g., "Add more info about CNNs"]
+> 
+> **Output Format:**
+> Return ONLY the SQL command starting with `UPDATE lessons SET ... WHERE id = '...';`. Use `::jsonb` for any JSON field updates.
+
+---
+
+## 3. Add a Daily Challenge
 **Prompt:**
 > Generate a PostgreSQL `INSERT` command for the `daily_challenges` table.
 > **Topic:** [INSERT TOPIC HERE]

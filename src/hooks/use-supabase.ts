@@ -9,9 +9,7 @@ export function useGetLessons() {
   return useQuery<Lesson[]>({
     queryKey: ["lessons"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("lessons")
-        .select("*");
+      const { data, error } = await supabase.from("lessons").select("*");
       if (error) throw error;
       return data as Lesson[];
     },
@@ -38,17 +36,60 @@ export function useGetCategories() {
   return useQuery<Category[]>({
     queryKey: ["categories"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("categories")
-        .select("*");
+      const { data, error } = await supabase.from("categories").select("*");
       if (error) throw error;
       return data as Category[];
     },
   });
 }
 
+export function useGetCategoryById(id: string) {
+  return useQuery<Category>({
+    queryKey: ["categories", id],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .eq("id", id)
+        .single();
+      if (error) throw error;
+      return data as Category;
+    },
+    enabled: !!id,
+  });
+}
+
+export function useGetLessonsByCategory(
+  categoryName: string,
+  categoryId?: string
+) {
+  return useQuery<Lesson[]>({
+    queryKey: ["lessons", "category", categoryName, categoryId],
+    queryFn: async () => {
+      let query = supabase.from("lessons").select("*");
+
+      if (categoryId && categoryName) {
+        query = query.or(
+          `category.ilike.${categoryName},category.eq.${categoryId}`
+        );
+      } else if (categoryName) {
+        query = query.ilike("category", categoryName);
+      } else if (categoryId) {
+        query = query.eq("category", categoryId);
+      } else {
+        return [];
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data as Lesson[];
+    },
+    enabled: !!categoryName || !!categoryId,
+  });
+}
+
 export function useGetDailyChallenge() {
-  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const todayStr = format(new Date(), "yyyy-MM-dd");
   return useQuery<DailyChallenge>({
     queryKey: ["daily-challenge", todayStr],
     queryFn: async () => {
@@ -57,9 +98,9 @@ export function useGetDailyChallenge() {
         .select("*")
         .eq("date", todayStr)
         .maybeSingle();
-      
+
       if (error) throw error;
-      
+
       if (!data) {
         // Fallback to latest challenge if today's is not found
         const { data: latest, error: latestError } = await supabase
@@ -71,13 +112,13 @@ export function useGetDailyChallenge() {
         if (latestError) throw latestError;
         return {
           ...latest,
-          xpReward: latest.xp_reward
+          xpReward: latest.xp_reward,
         } as DailyChallenge;
       }
-      
+
       return {
         ...data,
-        xpReward: data.xp_reward
+        xpReward: data.xp_reward,
       } as DailyChallenge;
     },
   });
@@ -94,9 +135,9 @@ export function useUserStats() {
         .select("*")
         .eq("id", user.id)
         .maybeSingle();
-      
+
       if (error) throw error;
-      
+
       if (!data) {
         // Initialize stats if they don't exist
         const initialStats = {
@@ -106,7 +147,7 @@ export function useUserStats() {
           completed_lessons: [],
           xp: 0,
           daily_challenge_done: null,
-          badges: []
+          badges: [],
         };
         const { data: inserted, error: insertError } = await supabase
           .from("user_stats")
@@ -116,7 +157,7 @@ export function useUserStats() {
         if (insertError) throw insertError;
         return inserted as UserStats;
       }
-      
+
       return data as UserStats;
     },
     enabled: !!user,
@@ -126,11 +167,11 @@ export function useUserStats() {
 export function useUpdateUserStats() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (updates: Partial<UserStats>) => {
       if (!user) throw new Error("User not authenticated");
-      
+
       // Get current stats to check for badges
       const { data: current } = await supabase
         .from("user_stats")
@@ -142,12 +183,12 @@ export function useUpdateUserStats() {
       const newBadges = checkBadges({
         streak: newStats.streak || 0,
         xp: newStats.xp || 0,
-        completed_lessons: newStats.completed_lessons || []
+        completed_lessons: newStats.completed_lessons || [],
       });
 
       const finalUpdates = {
         ...updates,
-        badges: Array.from(new Set([...(current?.badges || []), ...newBadges]))
+        badges: Array.from(new Set([...(current?.badges || []), ...newBadges])),
       };
 
       const { data, error } = await supabase

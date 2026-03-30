@@ -128,38 +128,96 @@ export default function Progress() {
           </div>
         </section>
 
-        {/* Mastery Chart */}
-        <section className="bg-card border border-white/5 rounded-3xl p-6">
-          <div className="flex items-center gap-2 mb-6">
-            <BarChart className="w-5 h-5 text-primary" />
-            <h2 className="text-xl font-display font-bold">Mastery by Category</h2>
+        {/* Mastery by Category */}
+        <section className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <BarChart className="w-5 h-5 text-primary" />
+              <h2 className="text-xl font-display font-bold">Mastery by Category</h2>
+            </div>
+            <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Skill Breakdown</span>
           </div>
           
-          <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <ReBarChart data={masteryData} layout="vertical" margin={{ left: 0, right: 30 }}>
-                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.05)" />
-                <XAxis type="number" hide domain={[0, 100]} />
-                <YAxis 
-                  dataKey="name" 
-                  type="category" 
-                  width={100} 
-                  axisLine={false} 
-                  tickLine={false}
-                  tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 12, fontWeight: 500 }}
-                />
-                <Tooltip 
-                  cursor={{ fill: 'rgba(255,255,255,0.05)' }}
-                  contentStyle={{ backgroundColor: '#18181b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                />
-                <Bar dataKey="percent" radius={[0, 4, 4, 0]} barSize={20}>
-                  {masteryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </ReBarChart>
-            </ResponsiveContainer>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {categories?.map((cat) => {
+              const catLessons = lessons?.filter(l => l.category === cat.name) || [];
+              const catCompleted = catLessons.filter(l => completedIds.includes(l.id)).length;
+              const catPercent = catLessons.length > 0 ? Math.round((catCompleted / catLessons.length) * 100) : 0;
+              
+              return (
+                <motion.div 
+                  key={cat.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-card border border-white/5 rounded-3xl p-5 hover:border-white/10 transition-colors group"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm"
+                        style={{ backgroundColor: `${cat.color}15`, color: cat.color }}
+                      >
+                        <Target className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-sm leading-none mb-1">{cat.name}</h4>
+                        <p className="text-xs text-muted-foreground">
+                          {catCompleted} of {catLessons.length} lessons
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-lg font-bold font-display" style={{ color: cat.color }}>
+                        {catPercent}%
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="relative h-2 w-full bg-secondary rounded-full overflow-hidden">
+                    <motion.div 
+                      className="absolute top-0 left-0 h-full rounded-full"
+                      style={{ backgroundColor: cat.color }}
+                      initial={{ width: 0 }}
+                      animate={{ width: `${catPercent}%` }}
+                      transition={{ duration: 1, delay: 0.2 }}
+                    />
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
+
+          {/* Overall Mastery Chart (Simplified) */}
+          {/*<div className="bg-card/30 border border-white/5 rounded-3xl p-6 mt-4">
+            <div className="h-[200px] w-full">
+              <ResponsiveContainer width="100%" height="100%">
+                <ReBarChart data={masteryData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                  <XAxis 
+                    dataKey="name" 
+                    axisLine={false} 
+                    tickLine={false}
+                    tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10 }}
+                  />
+                  <Tooltip 
+                    cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                    contentStyle={{ 
+                      backgroundColor: '#18181b', 
+                      border: '1px solid rgba(255,255,255,0.1)', 
+                      borderRadius: '16px',
+                      fontSize: '12px'
+                    }}
+                    itemStyle={{ fontWeight: 'bold' }}
+                  />
+                  <Bar dataKey="percent" radius={[6, 6, 0, 0]} barSize={40}>
+                    {masteryData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} fillOpacity={0.8} />
+                    ))}
+                  </Bar>
+                </ReBarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+          */}
         </section>
 
         {/* Milestone Path / Timeline */}
