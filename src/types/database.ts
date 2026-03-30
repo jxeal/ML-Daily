@@ -23,6 +23,7 @@ export interface Lesson {
   examples: string[];
   quiz: QuizQuestion[];
   icon: string;
+  xp_reward?: number;
 }
 
 export interface DailyChallenge {

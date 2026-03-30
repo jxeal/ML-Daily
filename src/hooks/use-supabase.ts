@@ -167,21 +167,30 @@ export function useUserStats() {
   });
 }
 
-export function useUserProfile(username: string) {
+export function useUserProfile(usernameOrId: string) {
   return useQuery<UserStats | null>({
-    queryKey: ["user-profile", username],
+    queryKey: ["user-profile", usernameOrId],
     queryFn: async () => {
-      if (!username) return null;
+      if (!usernameOrId) return null;
+
+      const isUuid =
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          usernameOrId
+        );
+      const query = isUuid
+        ? `username.eq.${usernameOrId},id.eq.${usernameOrId}`
+        : `username.eq.${usernameOrId}`;
+
       const { data, error } = await supabase
         .from("user_stats")
         .select("*")
-        .eq("username", username)
+        .or(query)
         .maybeSingle();
 
       if (error) throw error;
       return data as UserStats;
     },
-    enabled: !!username,
+    enabled: !!usernameOrId,
   });
 }
 

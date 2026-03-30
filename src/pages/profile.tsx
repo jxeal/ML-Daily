@@ -17,10 +17,17 @@ export default function Profile({ params }: { params?: { username?: string } }) 
   const { user, signOut, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   
-  const isPublicView = !!params?.username;
   const { data: publicStats, isLoading: publicStatsLoading } = useUserProfile(params?.username || "");
   const { data: supabaseStats, isLoading: statsLoading } = useUserStats();
   const { mutateAsync: updateStats } = useUpdateUserStats();
+
+  const isOwnProfile = user && (
+    !params?.username || 
+    params.username === user.user_metadata?.username || 
+    params.username === supabaseStats?.username || 
+    params.username === user.id
+  );
+  const isPublicView = !!params?.username && !isOwnProfile;
   
   const localStats = useStatsStore();
   const { toast } = useToast();
@@ -29,17 +36,29 @@ export default function Profile({ params }: { params?: { username?: string } }) 
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const [displayName, setDisplayName] = useState("");
   const [username, setUsername] = useState("");
+  const [avatarUrl, setAvatarUrl] = useState("");
   const [password, setPassword] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
 
   const isGoogleAuth = user?.app_metadata?.providers?.includes('google') || user?.app_metadata?.provider === 'google';
 
+  // Redirect /profile to /profile/username if logged in
+  useEffect(() => {
+    if (user && !params?.username && !statsLoading) {
+      const targetUsername = supabaseStats?.username || user.user_metadata?.username || user.id;
+      if (targetUsername) {
+        setLocation(`/profile/${targetUsername}`, { replace: true });
+      }
+    }
+  }, [user, params?.username, supabaseStats, statsLoading, setLocation]);
+
   useEffect(() => {
     if (user && !isPublicView) {
-      setDisplayName(user.user_metadata?.full_name || "");
-      setUsername(user.user_metadata?.username || "");
+      setDisplayName(user.user_metadata?.full_name || supabaseStats?.full_name || "");
+      setUsername(user.user_metadata?.username || supabaseStats?.username || "");
+      setAvatarUrl(user.user_metadata?.avatar_url || supabaseStats?.avatar_url || "");
     }
-  }, [user, isPublicView]);
+  }, [user, isPublicView, supabaseStats]);
 
   const handleShareProfile = async () => {
     // Share using username if available, otherwise fallback to id
@@ -74,6 +93,7 @@ export default function Profile({ params }: { params?: { username?: string } }) 
         data: {
           full_name: displayName,
           username: username,
+          avatar_url: avatarUrl,
         }
       };
       
@@ -88,6 +108,7 @@ export default function Profile({ params }: { params?: { username?: string } }) 
       await updateStats({
         username: username,
         full_name: displayName,
+        avatar_url: avatarUrl,
       });
       
       toast({
@@ -127,7 +148,7 @@ export default function Profile({ params }: { params?: { username?: string } }) 
       badges: publicStats?.badges || [],
     };
     displayUser = {
-      full_name: publicStats?.full_name || params.username,
+      full_name: publicStats?.full_name || params?.username,
       avatar_url: publicStats?.avatar_url,
     };
   } else {
@@ -333,6 +354,17 @@ export default function Profile({ params }: { params?: { username?: string } }) 
                           />
                         </div>
                         <p className="text-[11px] text-muted-foreground">Unique identifier for your profile URL.</p>
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="avatarUrl" className="text-foreground/80 text-sm font-medium">Avatar URL</Label>
+                        <Input 
+                          id="avatarUrl" 
+                          value={avatarUrl} 
+                          onChange={(e) => setAvatarUrl(e.target.value)} 
+                          placeholder={user?.user_metadata?.avatar_url || "https://example.com/avatar.png"}
+                          className="bg-secondary/30 border-white/10 focus-visible:ring-primary h-11 rounded-xl"
+                        />
+                        <p className="text-[11px] text-muted-foreground">Link to your profile picture.</p>
                       </div>
                     </div>
                   </div>
