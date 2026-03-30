@@ -2,16 +2,98 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { useStatsStore } from "@/store/use-stats";
 import { useUserStats } from "@/hooks/use-supabase";
 import { useAuth } from "@/components/auth/auth-provider";
-import { Award, Flame, User as UserIcon, Zap, BookOpen, Share2, LogOut, LogIn, Settings } from "lucide-react";
+import { Award, Flame, User as UserIcon, Zap, BookOpen, Share2, LogOut, LogIn, Settings, Shield } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/lib/supabase";
 
 export default function Profile() {
   const { user, signOut, loading: authLoading } = useAuth();
   const [, setLocation] = useLocation();
   const { data: supabaseStats, isLoading: statsLoading } = useUserStats();
   const localStats = useStatsStore();
+  const { toast } = useToast();
+
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const isGoogleAuth = user?.app_metadata?.providers?.includes('google') || user?.app_metadata?.provider === 'google';
+
+  useEffect(() => {
+    if (user) {
+      setDisplayName(user.user_metadata?.full_name || "");
+      setUsername(user.user_metadata?.username || "");
+    }
+  }, [user]);
+
+  const handleShareProfile = async () => {
+    const profileUrl = `${window.location.origin}/profile/${user?.id || 'guest'}`;
+    
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'My ML Daily Profile',
+          text: `Check out my machine learning progress on ML Daily!`,
+          url: profileUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(profileUrl);
+        toast({
+          title: "Link copied!",
+          description: "Profile link copied to clipboard.",
+        });
+      }
+    } catch (error) {
+      console.error("Error sharing:", error);
+    }
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsUpdating(true);
+    
+    try {
+      const updates: any = {
+        data: {
+          full_name: displayName,
+          username: username,
+        }
+      };
+      
+      if (password) {
+        updates.password = password;
+      }
+      
+      const { error } = await supabase.auth.updateUser(updates);
+      
+      if (error) throw error;
+      
+      toast({
+        title: "Profile updated",
+        description: "Your account settings have been saved.",
+      });
+      
+      setIsSettingsOpen(false);
+      setPassword(""); // Clear password field
+    } catch (error: any) {
+      toast({
+        title: "Error updating profile",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   const isLoading = authLoading || statsLoading;
 
@@ -128,15 +210,103 @@ export default function Profile() {
 
         {/* Actions */}
         <div className="space-y-3">
-          <button className="w-full bg-card hover:bg-secondary border border-white/5 text-foreground font-bold py-4 rounded-2xl transition-colors flex items-center justify-center gap-2">
+          <button 
+            onClick={handleShareProfile}
+            className="w-full bg-card hover:bg-secondary border border-white/5 text-foreground font-bold py-4 rounded-2xl transition-colors flex items-center justify-center gap-2"
+          >
             <Share2 className="w-5 h-5" />
             Share Profile
           </button>
           
-          <button className="w-full bg-card hover:bg-secondary border border-white/5 text-foreground font-bold py-4 rounded-2xl transition-colors flex items-center justify-center gap-2">
-            <Settings className="w-5 h-5" />
-            Account Settings
-          </button>
+          <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
+            <DialogTrigger asChild>
+              <button className="w-full bg-card hover:bg-secondary border border-white/5 text-foreground font-bold py-4 rounded-2xl transition-colors flex items-center justify-center gap-2">
+                <Settings className="w-5 h-5" />
+                Account Settings
+              </button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px] bg-card/95 backdrop-blur-xl border-white/10 p-0 overflow-hidden rounded-3xl">
+              <div className="p-6 pb-0">
+                <DialogHeader>
+                  <DialogTitle className="text-2xl font-display">Account Settings</DialogTitle>
+                  <DialogDescription className="text-muted-foreground mt-1.5">
+                    Update your profile details below. You only need to fill out the fields you want to change.
+                  </DialogDescription>
+                </DialogHeader>
+              </div>
+              
+              <form onSubmit={handleUpdateProfile} className="p-6 pt-4 space-y-6">
+                
+                {/* Profile Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                    <UserIcon className="w-4 h-4 text-primary" />
+                    <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Public Profile</h4>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="displayName" className="text-foreground/80 text-sm font-medium">Display Name</Label>
+                      <Input 
+                        id="displayName" 
+                        value={displayName} 
+                        onChange={(e) => setDisplayName(e.target.value)} 
+                        placeholder={user?.user_metadata?.full_name || "e.g. ML Explorer"}
+                        className="bg-secondary/30 border-white/10 focus-visible:ring-primary h-11 rounded-xl"
+                      />
+                      <p className="text-[11px] text-muted-foreground">This is your public-facing name.</p>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="username" className="text-foreground/80 text-sm font-medium">Username</Label>
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
+                        <Input 
+                          id="username" 
+                          value={username} 
+                          onChange={(e) => setUsername(e.target.value)} 
+                          placeholder={user?.user_metadata?.username || "mlexplorer123"}
+                          className="pl-8 bg-secondary/30 border-white/10 focus-visible:ring-primary h-11 rounded-xl"
+                        />
+                      </div>
+                      <p className="text-[11px] text-muted-foreground">Unique identifier for your profile URL.</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Security Section */}
+                {!isGoogleAuth && (
+                  <div className="space-y-4 pt-2">
+                    <div className="flex items-center gap-2 pb-2 border-b border-white/5">
+                      <Shield className="w-4 h-4 text-primary" />
+                      <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Security</h4>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="password" className="text-foreground/80 text-sm font-medium">New Password</Label>
+                      <Input 
+                        id="password" 
+                        type="password" 
+                        value={password} 
+                        onChange={(e) => setPassword(e.target.value)} 
+                        placeholder="Leave blank to keep current"
+                        className="bg-secondary/30 border-white/10 focus-visible:ring-primary h-11 rounded-xl"
+                      />
+                      <p className="text-[11px] text-muted-foreground">Only fill this if you want to change your password.</p>
+                    </div>
+                  </div>
+                )}
+
+                <div className="pt-6 flex justify-end gap-3 border-t border-white/5 mt-6">
+                  <Button type="button" variant="ghost" onClick={() => setIsSettingsOpen(false)} className="rounded-xl">
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={isUpdating} className="bg-primary hover:bg-primary/90 text-primary-foreground rounded-xl px-6">
+                    {isUpdating ? "Saving..." : "Save Changes"}
+                  </Button>
+                </div>
+              </form>
+            </DialogContent>
+          </Dialog>
 
           <button 
             onClick={() => signOut()}

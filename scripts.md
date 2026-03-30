@@ -8,7 +8,7 @@ Use these prompts with an AI (like ChatGPT or Gemini) to generate SQL commands f
 **Prompt:**
 > Generate a PostgreSQL `INSERT` command for the `lessons` table. 
 > **Topic:** [INSERT TOPIC HERE]
-> **Category:** [Choose from: Beginner, Supervised Learning, Unsupervised Learning, Deep Learning, Computer Vision, NLP, Reinforcement Learning, MLOps]
+> **Category:** [Choose from: Statistics, Supervised Learning, Unsupervised Learning, Deep Learning]
 > **Difficulty:** [Choose from: Beginner, Intermediate, Advanced]
 > 
 > **Table Schema:**
@@ -58,7 +58,7 @@ Use these prompts with an AI (like ChatGPT or Gemini) to generate SQL commands f
 
 ---
 
-## 3. Add a New Category
+## 4. Add a New Category
 **Prompt:**
 > Generate a PostgreSQL `INSERT` command for the `categories` table.
 > **Topic:** [INSERT CATEGORY NAME]
