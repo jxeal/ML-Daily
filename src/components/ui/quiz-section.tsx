@@ -1,19 +1,20 @@
 import { useState } from 'react';
 import { type QuizQuestion } from '@/types/database';
-import { CheckCircle2, XCircle, ArrowRight } from 'lucide-react';
+import { CheckCircle2, XCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useStatsStore } from '@/store/use-stats';
 import { useLocation } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/components/auth/auth-provider';
-import { useUpdateUserStats, useUserStats } from '@/hooks/use-supabase';
+import { useUpdateUserStats, useUserStats, useGetLessonsByCategory } from '@/hooks/use-supabase';
 
 interface QuizSectionProps {
   lessonId: string;
+  lessonCategory?: string;
   quiz: QuizQuestion[];
 }
 
-export function QuizSection({ lessonId, quiz }: QuizSectionProps) {
+export function QuizSection({ lessonId, lessonCategory, quiz }: QuizSectionProps) {
   const { user } = useAuth();
   const { data: supabaseStats } = useUserStats();
   const updateStats = useUpdateUserStats();
@@ -23,6 +24,11 @@ export function QuizSection({ lessonId, quiz }: QuizSectionProps) {
   const [isFinished, setIsFinished] = useState(false);
   const [, setLocation] = useLocation();
   const completeLesson = useStatsStore(state => state.completeLesson);
+  const localCompleted = useStatsStore(state => state.completedLessons);
+
+  const { data: categoryLessons } = useGetLessonsByCategory(lessonCategory || "");
+  const completedLessons = user && supabaseStats ? supabaseStats.completed_lessons : localCompleted;
+  const nextLesson = categoryLessons?.find(l => l.id !== lessonId && !completedLessons.includes(l.id));
 
   if (!quiz || quiz.length === 0) return null;
 
@@ -72,12 +78,30 @@ export function QuizSection({ lessonId, quiz }: QuizSectionProps) {
         </div>
         <h3 className="text-3xl font-display font-bold mb-2">Lesson Completed!</h3>
         <p className="text-muted-foreground mb-8 text-lg">You earned +10 XP for your progress.</p>
-        <button 
-          onClick={() => setLocation('/')}
-          className="bg-primary text-primary-foreground font-bold px-8 py-4 rounded-xl w-full sm:w-auto hover:opacity-90 transition-opacity"
-        >
-          Return to Home
-        </button>
+        <div className="flex flex-col items-center gap-6">
+          {nextLesson && (
+            <button 
+              onClick={() => {
+                setIsFinished(false);
+                setCurrentIdx(0);
+                setSelectedId(null);
+                setIsSubmitted(false);
+                setLocation(`/lessons/${nextLesson.id}`);
+              }}
+              className="bg-primary text-primary-foreground font-bold px-8 py-4 rounded-xl w-full sm:w-auto hover:opacity-90 transition-opacity"
+            >
+              Next Lesson
+            </button>
+          )}
+          
+          <button 
+            onClick={() => setLocation(lessonCategory ? `/categories/${lessonCategory.toLowerCase().replace(/\s+/g, "-")}` : '/')}
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="font-medium text-sm">Go Back</span>
+          </button>
+        </div>
       </motion.div>
     );
   }

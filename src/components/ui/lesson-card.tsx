@@ -71,8 +71,8 @@ export const LessonCard = memo(function LessonCard({
         </div>
 
         <div className="flex items-center justify-between relative z-10">
-          <span className="text-2xl">{lesson.icon}</span>
-          <div className="flex items-center gap-2 text-sm font-bold text-foreground group-hover:text-primary transition-colors bg-secondary/50 py-2 px-4 rounded-xl group-hover:bg-primary/10">
+          {/* <span className="text-2xl">{lesson.icon}</span> */}
+          <div className="flex items-center gap-2 text-sm font-bold text-foreground group-hover:text-primary transition-colors bg-secondary/50 py-2 px-4 rounded-xl group-hover:bg-primary/10 ml-auto">
             {isCompleted ? "Review Lesson" : "Learn Now"}
             {isCompleted ? (
               <ArrowRight className="w-4 h-4" />

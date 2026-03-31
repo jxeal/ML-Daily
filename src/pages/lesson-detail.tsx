@@ -50,9 +50,9 @@ export default function LessonDetail() {
           </Link>
 
           <div className="flex items-center gap-3 mb-4">
-            <span className="text-4xl bg-secondary/50 p-3 rounded-2xl">
+            {/* <span className="text-4xl bg-secondary/50 p-3 rounded-2xl">
               {lesson.icon}
-            </span>
+            </span> */}
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
@@ -104,7 +104,7 @@ export default function LessonDetail() {
           )}
 
           {/* Quiz Section */}
-          <QuizSection lessonId={lesson.id} quiz={lesson.quiz} />
+          <QuizSection lessonId={lesson.id} lessonCategory={lesson.category} quiz={lesson.quiz} />
         </div>
       </div>
     </AppLayout>
