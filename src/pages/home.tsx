@@ -22,7 +22,7 @@ export default function Home() {
 
   return (
     <AppLayout>
-      <div className="px-4 md:px-6 py-4 space-y-8 animate-in fade-in duration-500">
+      <div className="px-4 md:px-6 py-4 space-y-8">
         
         {/* Welcome Section */}
         <section className="mb-2">
