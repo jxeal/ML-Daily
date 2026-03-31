@@ -45,10 +45,10 @@ export default function Home() {
             </div>
           ) : challenge ? (
             <Link href={isChallengeDone ? "#" : `/challenge/${challenge.id}`} className={isChallengeDone ? "pointer-events-none opacity-80" : ""}>
-              <div className="relative overflow-hidden rounded-3xl p-6 border border-accent/20 bg-gradient-to-br from-card to-accent/5 shadow-lg shadow-accent/5 transition-transform hover:-translate-y-1">
+              <div className="relative overflow-hidden rounded-3xl p-6 border border-accent/20 bg-gradient-to-br from-card-alt to-accent/5 shadow-lg shadow-accent/5 transition-transform hover:-translate-y-1">
                 
                 {/* Visual Flair */}
-                <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+                <div className="absolute top-0 right-0 p-4 opacity-20 pointer-events-none">
                   <Zap className="w-32 h-32 text-accent" />
                 </div>
 
@@ -57,7 +57,7 @@ export default function Home() {
                     <span className="bg-accent/20 text-accent text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
                       {isChallengeDone ? 'Completed' : 'Active Now'}
                     </span>
-                    <div className="flex items-center gap-1 font-bold text-warning bg-warning/10 px-3 py-1 rounded-full text-sm">
+                    <div className="flex items-center gap-1 font-bold text-warning bg-warning/20 px-3 py-1 rounded-full text-sm">
                       <Trophy className="w-3.5 h-3.5" />
                       +{challenge.xpReward} XP
                     </div>

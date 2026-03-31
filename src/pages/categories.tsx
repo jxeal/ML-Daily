@@ -30,8 +30,8 @@ export default function Categories() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * 0.1, duration: 0.3 }}
               >
-                <Link href={`/categories/${cat.id}`} className="block group">
-                  <div className="bg-card p-6 rounded-3xl border border-white/5 h-full transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 relative overflow-hidden">
+                <Link href={`/categories/${cat.id}`} className="block group h-full">
+                  <div className="bg-card p-6 rounded-3xl border border-white/5 h-full transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 relative overflow-hidden flex flex-col">
                     
                     {/* Color splash */}
                     <div 
@@ -44,7 +44,7 @@ export default function Categories() {
                       <h3 className="text-xl font-display font-bold">{cat.name}</h3>
                     </div>
                     
-                    <p className="text-sm text-muted-foreground mb-6 relative z-10 line-clamp-2">
+                    <p className="text-sm text-muted-foreground mb-6 relative z-10 line-clamp-2 flex-grow">
                       {cat.description}
                     </p>
 
