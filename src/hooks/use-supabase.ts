@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { Lesson, Category, DailyChallenge, UserStats } from "@/types/database";
+import { Lesson, Category, DailyChallenge, UserStats, Badge } from "@/types/database";
 import { format } from "date-fns";
 import { useAuth } from "@/components/auth/auth-provider";
 import { checkBadges } from "@/lib/utils";
@@ -194,6 +194,17 @@ export function useUserProfile(usernameOrId: string) {
   });
 }
 
+export function useGetBadges() {
+  return useQuery<Badge[]>({
+    queryKey: ["badges"],
+    queryFn: async () => {
+      const { data, error } = await supabase.from("badges").select("*");
+      if (error) throw error;
+      return data as Badge[];
+    },
+  });
+}
+
 export function useUpdateUserStats() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -202,31 +213,13 @@ export function useUpdateUserStats() {
     mutationFn: async (updates: Partial<UserStats>) => {
       if (!user) throw new Error("User not authenticated");
 
-      // Get current stats to check for badges
-      const { data: current } = await supabase
-        .from("user_stats")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      const newStats = { ...current, ...updates };
-      const newBadges = checkBadges({
-        streak: newStats.streak || 0,
-        xp: newStats.xp || 0,
-        completed_lessons: newStats.completed_lessons || [],
-      });
-
-      const finalUpdates = {
-        ...updates,
-        badges: Array.from(new Set([...(current?.badges || []), ...newBadges])),
-      };
-
       const { data, error } = await supabase
         .from("user_stats")
-        .update(finalUpdates)
+        .update(updates)
         .eq("id", user.id)
         .select()
         .single();
+      
       if (error) throw error;
       return data as UserStats;
     },

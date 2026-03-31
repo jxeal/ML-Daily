@@ -1,8 +1,8 @@
 import { AppLayout } from "@/components/layout/app-layout";
 import { useStatsStore } from "@/store/use-stats";
-import { useUserStats, useUserProfile, useUpdateUserStats } from "@/hooks/use-supabase";
+import { useUserStats, useUserProfile, useUpdateUserStats, useGetBadges } from "@/hooks/use-supabase";
 import { useAuth } from "@/components/auth/auth-provider";
-import { Award, Flame, User as UserIcon, Zap, BookOpen, Share2, LogOut, LogIn, Settings, Shield } from "lucide-react";
+import { Award, Flame, User as UserIcon, Zap, BookOpen, Share2, LogOut, LogIn, Settings, Shield, ChevronRight, Star, Trophy, Target } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
@@ -19,6 +19,7 @@ export default function Profile({ params }: { params?: { username?: string } }) 
   
   const { data: publicStats, isLoading: publicStatsLoading } = useUserProfile(params?.username || "");
   const { data: supabaseStats, isLoading: statsLoading } = useUserStats();
+  const { data: allBadges, isLoading: allBadgesLoading } = useGetBadges();
   const { mutateAsync: updateStats } = useUpdateUserStats();
 
   const isOwnProfile = user && (
@@ -135,17 +136,17 @@ export default function Profile({ params }: { params?: { username?: string } }) 
     setLocation("/");
   };
 
-  const isLoading = isPublicView ? publicStatsLoading : (authLoading || statsLoading);
+  const isLoading = isPublicView ? publicStatsLoading : (authLoading || statsLoading || allBadgesLoading);
 
   // Determine which stats to show
-  let stats;
+  let stats: { streak: number; xp: number; badges: any[] };
   let displayUser;
 
   if (isPublicView) {
     stats = {
       streak: publicStats?.streak || 0,
       xp: publicStats?.xp || 0,
-      badges: publicStats?.badges || [],
+      badges: Array.isArray(publicStats?.badges) ? publicStats.badges : [],
     };
     displayUser = {
       full_name: publicStats?.full_name || params?.username,
@@ -155,19 +156,58 @@ export default function Profile({ params }: { params?: { username?: string } }) 
     stats = user ? {
       streak: supabaseStats?.streak || 0,
       xp: supabaseStats?.xp || 0,
-      badges: supabaseStats?.badges || [],
-    } : localStats;
+      badges: Array.isArray(supabaseStats?.badges) ? supabaseStats.badges : [],
+    } : {
+      streak: localStats.streak,
+      xp: localStats.xp,
+      badges: Array.isArray(localStats.badges) ? localStats.badges : [],
+    };
     displayUser = {
       full_name: user?.user_metadata?.full_name || user?.email?.split('@')[0] || "ML Explorer",
       avatar_url: user?.user_metadata?.avatar_url,
     };
   }
 
-  const getBadgeIcon = (badge: string) => {
-    if (badge.includes('Streak')) return <Flame className="w-6 h-6 text-orange-500" />;
-    if (badge.includes('Learner')) return <BookOpen className="w-6 h-6 text-blue-500" />;
-    return <Award className="w-6 h-6 text-accent" />;
+  const getBadgeIcon = (iconName: string, className: string = "w-6 h-6") => {
+    switch (iconName) {
+      case 'Flame': return <Flame className={`${className} text-orange-500`} />;
+      case 'BookOpen': return <BookOpen className={`${className} text-blue-500`} />;
+      case 'Zap': return <Zap className={`${className} text-yellow-500`} />;
+      case 'Star': return <Star className={`${className} text-yellow-400`} />;
+      case 'Trophy': return <Trophy className={`${className} text-yellow-600`} />;
+      case 'Target': return <Target className={`${className} text-red-500`} />;
+      default: return <Award className={`${className} text-accent`} />;
+    }
   };
+
+  // Resolve badge details
+  const resolvedBadges = stats.badges.slice().reverse().slice(0, 3).map((b: any) => {
+    const badgeIdOrName = typeof b === 'string' ? b : (b.id || b.name);
+    const dbBadge = allBadges?.find(dbB => dbB.id === badgeIdOrName || dbB.name === badgeIdOrName);
+    
+    if (dbBadge) {
+      return {
+        id: dbBadge.id,
+        name: dbBadge.name,
+        icon_name: dbBadge.icon_name,
+        image_url: dbBadge.image_url,
+      };
+    }
+    
+    return null;
+  }).filter(Boolean) as any[];
+
+  const isCatalogEmpty = !allBadgesLoading && (!allBadges || allBadges.length === 0);
+
+  if (isLoading) {
+    return (
+      <AppLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      </AppLayout>
+    );
+  }
 
   if (!user && !authLoading && !isPublicView) {
     return (
@@ -229,8 +269,10 @@ export default function Profile({ params }: { params?: { username?: string } }) 
           <h1 className="text-3xl font-display font-bold mb-1">
             {displayUser.full_name}
           </h1>
-          {isPublicView && params?.username && (
-            <p className="text-sm text-muted-foreground mb-2">@{params.username}</p>
+          {(params?.username || supabaseStats?.username || user?.user_metadata?.username) && (
+            <p className="text-sm text-muted-foreground mb-2">
+              @{params?.username || supabaseStats?.username || user?.user_metadata?.username}
+            </p>
           )}
           <p className="text-muted-foreground flex items-center gap-1">
             <Zap className="w-4 h-4 text-warning fill-warning" />
@@ -240,20 +282,24 @@ export default function Profile({ params }: { params?: { username?: string } }) 
 
         {/* Quick Stats Grid */}
         <section className="grid grid-cols-2 gap-4">
-          <div className="bg-card rounded-3xl p-5 border border-white/5 flex flex-col items-center text-center">
-            <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center mb-3">
+          <div className="bg-card rounded-3xl p-5 border border-white/5 flex items-center justify-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
               <Flame className="w-6 h-6 text-orange-500 fill-orange-500" />
             </div>
-            <span className="text-3xl font-bold font-display">{stats.streak}</span>
-            <span className="text-sm font-medium text-muted-foreground">Day Streak</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-bold font-display leading-none">{stats.streak}</span>
+              <span className="text-sm font-medium text-muted-foreground">Day Streak</span>
+            </div>
           </div>
 
-          <div className="bg-card rounded-3xl p-5 border border-white/5 flex flex-col items-center text-center">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+          <div className="bg-card rounded-3xl p-5 border border-white/5 flex items-center justify-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
               <Zap className="w-6 h-6 text-primary fill-primary" />
             </div>
-            <span className="text-3xl font-bold font-display">{stats.xp}</span>
-            <span className="text-sm font-medium text-muted-foreground">Total XP</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-bold font-display leading-none">{stats.xp}</span>
+              <span className="text-sm font-medium text-muted-foreground">Total XP</span>
+            </div>
           </div>
         </section>
 
@@ -264,30 +310,47 @@ export default function Profile({ params }: { params?: { username?: string } }) 
               <Award className="w-5 h-5 text-accent" />
               <h2 className="text-2xl font-display font-bold">Badges</h2>
             </div>
-            <span className="text-sm text-muted-foreground">{stats.badges.length} Earned</span>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-muted-foreground hover:text-foreground -mr-2" 
+              onClick={() => setLocation(isPublicView ? `/profile/${params?.username}/badges` : '/badges')}
+            >
+              View All <ChevronRight className="w-4 h-4 ml-1" />
+            </Button>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            {stats.badges.length === 0 ? (
-              <div className="col-span-full p-8 text-center border border-dashed border-white/10 rounded-3xl text-muted-foreground">
-                {isPublicView ? "This user hasn't earned any badges yet." : "Keep learning to earn your first badge!"}
-              </div>
-            ) : (
-              stats.badges.map((badge: string, idx: number) => (
-                <motion.div 
-                  key={badge}
-                  initial={{ scale: 0.8, opacity: 0 }}
-                  animate={{ scale: 1, opacity: 1 }}
-                  transition={{ delay: idx * 0.1 }}
-                  className="bg-secondary/40 border border-white/5 rounded-3xl p-6 flex flex-col items-center text-center gap-3 hover:bg-secondary/60 transition-colors"
-                >
-                  <div className="w-14 h-14 rounded-full bg-card shadow-inner flex items-center justify-center">
-                    {getBadgeIcon(badge)}
-                  </div>
-                  <span className="font-bold text-sm">{badge}</span>
-                </motion.div>
-              ))
-            )}
+          <div className="p-5 border border-border rounded-[2rem] bg-card/20">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {isCatalogEmpty ? (
+                <div className="col-span-full p-8 text-center border border-dashed border-border rounded-3xl text-muted-foreground">
+                  No achievements available at the moment.
+                </div>
+              ) : resolvedBadges.length === 0 ? (
+                <div className="col-span-full p-8 text-center border border-dashed border-border rounded-3xl text-muted-foreground">
+                  {isPublicView ? "This user hasn't earned any badges yet." : "Keep learning to earn your first badge!"}
+                </div>
+              ) : (
+                resolvedBadges.map((badge, idx: number) => (
+                  <motion.div 
+                    key={badge.id}
+                    initial={{ scale: 0.8, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className="bg-card dark:bg-secondary/50 border border-border rounded-3xl p-6 flex flex-col items-center text-center gap-3 hover:bg-accent/5 dark:hover:bg-secondary/80 transition-colors shadow-sm"
+                  >
+                    <div className="w-14 h-14 rounded-full bg-muted dark:bg-card shadow-inner flex items-center justify-center border border-border/50 overflow-hidden">
+                      {badge.image_url ? (
+                        <img src={badge.image_url} alt={badge.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      ) : (
+                        getBadgeIcon(badge.icon_name)
+                      )}
+                    </div>
+                    <span className="font-bold text-sm">{badge.name}</span>
+                  </motion.div>
+                ))
+              )}
+            </div>
           </div>
         </section>
 
@@ -330,7 +393,10 @@ export default function Profile({ params }: { params?: { username?: string } }) 
                     
                     <div className="space-y-4">
                       <div className="space-y-1.5">
-                        <Label htmlFor="displayName" className="text-foreground/80 text-sm font-medium">Display Name</Label>
+                        <div className="flex items-baseline gap-2">
+                          <Label htmlFor="displayName" className="text-foreground/80 text-sm font-medium">Display Name</Label>
+                          <span className="text-[11px] text-muted-foreground">(This is your public-facing name.)</span>
+                        </div>
                         <Input 
                           id="displayName" 
                           value={displayName} 
@@ -338,11 +404,13 @@ export default function Profile({ params }: { params?: { username?: string } }) 
                           placeholder={user?.user_metadata?.full_name || "e.g. ML Explorer"}
                           className="bg-secondary/30 border-white/10 focus-visible:ring-primary h-11 rounded-xl"
                         />
-                        <p className="text-[11px] text-muted-foreground">This is your public-facing name.</p>
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="username" className="text-foreground/80 text-sm font-medium">Username</Label>
+                        <div className="flex items-baseline gap-2">
+                          <Label htmlFor="username" className="text-foreground/80 text-sm font-medium">Username</Label>
+                          <span className="text-[11px] text-muted-foreground">(Unique identifier for your profile URL.)</span>
+                        </div>
                         <div className="relative">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">@</span>
                           <Input 
@@ -353,10 +421,12 @@ export default function Profile({ params }: { params?: { username?: string } }) 
                             className="pl-8 bg-secondary/30 border-white/10 focus-visible:ring-primary h-11 rounded-xl"
                           />
                         </div>
-                        <p className="text-[11px] text-muted-foreground">Unique identifier for your profile URL.</p>
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="avatarUrl" className="text-foreground/80 text-sm font-medium">Avatar URL</Label>
+                        <div className="flex items-baseline gap-2">
+                          <Label htmlFor="avatarUrl" className="text-foreground/80 text-sm font-medium">Avatar URL</Label>
+                          <span className="text-[11px] text-muted-foreground">(Link to your profile picture.)</span>
+                        </div>
                         <Input 
                           id="avatarUrl" 
                           value={avatarUrl} 
@@ -364,7 +434,6 @@ export default function Profile({ params }: { params?: { username?: string } }) 
                           placeholder={user?.user_metadata?.avatar_url || "https://example.com/avatar.png"}
                           className="bg-secondary/30 border-white/10 focus-visible:ring-primary h-11 rounded-xl"
                         />
-                        <p className="text-[11px] text-muted-foreground">Link to your profile picture.</p>
                       </div>
                     </div>
                   </div>
@@ -377,7 +446,10 @@ export default function Profile({ params }: { params?: { username?: string } }) 
                         <h4 className="text-xs font-bold text-foreground uppercase tracking-wider">Security</h4>
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="password" className="text-foreground/80 text-sm font-medium">New Password</Label>
+                        <div className="flex items-baseline gap-2">
+                          <Label htmlFor="password" className="text-foreground/80 text-sm font-medium">New Password</Label>
+                          <span className="text-[11px] text-muted-foreground">(Only fill this if you want to change your password.)</span>
+                        </div>
                         <Input 
                           id="password" 
                           type="password" 
@@ -386,7 +458,6 @@ export default function Profile({ params }: { params?: { username?: string } }) 
                           placeholder="Leave blank to keep current"
                           className="bg-secondary/30 border-white/10 focus-visible:ring-primary h-11 rounded-xl"
                         />
-                        <p className="text-[11px] text-muted-foreground">Only fill this if you want to change your password.</p>
                       </div>
                     </div>
                   )}

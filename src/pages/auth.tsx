@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { auth } from "@/lib/supabase";
+import { auth, supabase } from "@/lib/supabase";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Brain, Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function Auth() {
+  const [identifier, setIdentifier] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -20,19 +21,35 @@ export default function Auth() {
   const handleAuth = async (type: "login" | "signup") => {
     setLoading(true);
     try {
-      const { error } = type === "login" 
-        ? await auth.signInWithPassword({ email, password })
-        : await auth.signUp({ email, password });
-
-      if (error) throw error;
-
-      if (type === "signup") {
+      if (type === "login") {
+        let loginEmail = identifier;
+        
+        // If the user enters a username (no @ symbol), fetch their email via RPC
+        if (!identifier.includes('@')) {
+          const { data, error: rpcError } = await supabase.rpc('get_email_by_username', { p_username: identifier });
+          // If RPC fails or returns no data, we throw an error
+          if (rpcError || !data) {
+            throw new Error("Invalid username or password");
+          }
+          loginEmail = data;
+        }
+        
+        const { error } = await auth.signInWithPassword({ 
+          email: loginEmail, 
+          password 
+        });
+        if (error) throw error;
+        setLocation("/");
+      } else {
+        const { error } = await auth.signUp({ 
+          email, 
+          password
+        });
+        if (error) throw error;
         toast({
           title: "Success!",
           description: "Please check your email to confirm your account.",
         });
-      } else {
-        setLocation("/");
       }
     } catch (error: any) {
       toast({
@@ -128,13 +145,13 @@ export default function Auth() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="identifier">Email or Username</Label>
                   <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="name@example.com" 
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="identifier" 
+                    type="text" 
+                    placeholder="name@example.com or username" 
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">

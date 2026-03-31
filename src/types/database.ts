@@ -36,6 +36,16 @@ export interface DailyChallenge {
   xpReward: number; // In DB it's xp_reward
 }
 
+export interface Badge {
+  id: string;
+  name: string;
+  description: string;
+  quote: string;
+  icon_name: string;
+  image_url?: string;
+  created_at: string;
+}
+
 export interface UserStats {
   id: string;
   streak: number;
@@ -43,7 +53,7 @@ export interface UserStats {
   completed_lessons: string[];
   xp: number;
   daily_challenge_done: string | null;
-  badges: string[];
+  badges: { id: string; earned_at: string }[];
   updated_at?: string;
   username?: string;
   full_name?: string;

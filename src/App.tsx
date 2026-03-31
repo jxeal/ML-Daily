@@ -13,7 +13,9 @@ import Home from "@/pages/home";
 import Categories from "@/pages/categories";
 import LessonDetail from "@/pages/lesson-detail";
 import Progress from "@/pages/progress";
+import ProgressCategory from "@/pages/progress-category";
 import Profile from "@/pages/profile";
+import Badges from "@/pages/badges";
 import DailyChallenge from "@/pages/challenge";
 import CategoryDetail from "@/pages/category-detail";
 import NotFound from "@/pages/not-found";
@@ -36,8 +38,11 @@ function Router() {
       <Route path="/lessons/:id" component={LessonDetail} />
       <Route path="/challenge/:id" component={DailyChallenge} />
       <Route path="/progress" component={Progress} />
+      <Route path="/progress/:id" component={ProgressCategory} />
       <Route path="/profile" component={Profile} />
       <Route path="/profile/:username" component={Profile} />
+      <Route path="/profile/:username/badges" component={Badges} />
+      <Route path="/badges" component={Badges} />
       <Route path="/auth" component={Auth} />
       <Route component={NotFound} />
     </Switch>

@@ -224,30 +224,43 @@ export default function Progress() {
         <section>
           <div className="flex items-center gap-2 mb-6">
             <Shield className="w-5 h-5 text-accent" />
-            <h2 className="text-2xl font-display font-bold">Recent Achievements</h2>
+            <h2 className="text-2xl font-display font-bold">Recent Lessons Done</h2>
           </div>
           
-          <div className="space-y-4 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-white/10 before:to-transparent">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {isLoading ? (
-               <div className="h-20 bg-card rounded-2xl animate-pulse" />
+               <div className="h-20 bg-card rounded-2xl animate-pulse col-span-full" />
             ) : completedIds.length === 0 ? (
-               <div className="bg-card p-6 rounded-2xl text-center border border-white/5">
+               <div className="bg-card p-6 rounded-2xl text-center border border-white/5 col-span-full">
                  <p className="text-muted-foreground">Complete a lesson to see it here.</p>
                </div>
             ) : (
-              lessons?.filter(l => completedIds.includes(l.id)).map((lesson, idx) => (
-                <div key={lesson.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                  {/* Timeline Dot */}
-                  <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-background bg-emerald-500 text-background shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2 z-10">
-                    <CheckCircle2 className="w-5 h-5" />
-                  </div>
-                  {/* Card */}
-                  <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-2xl bg-card border border-white/5 shadow-sm">
-                    <div className="text-xs font-bold text-emerald-400 mb-1">{lesson.category}</div>
-                    <h4 className="font-bold text-lg">{lesson.title}</h4>
-                  </div>
-                </div>
-              ))
+              (() => {
+                const completedLessons = lessons?.filter(l => completedIds.includes(l.id)) || [];
+                const completedByCategory = completedLessons.reduce((acc, lesson) => {
+                  if (!lesson.category) return acc;
+                  if (!acc[lesson.category]) {
+                    acc[lesson.category] = [];
+                  }
+                  acc[lesson.category]!.push(lesson);
+                  return acc;
+                }, {} as Record<string, typeof lessons>);
+
+                return Object.entries(completedByCategory).map(([categoryName, catLessons], idx) => {
+                  const categorySlug = categoryName.toLowerCase().replace(/\s+/g, "-");
+                  const lessonCount = catLessons?.length || 0;
+                  return (
+                    <div 
+                      key={categoryName} 
+                      className="p-4 rounded-2xl bg-card border border-white/5 shadow-sm hover:border-primary/50 transition-colors cursor-pointer flex flex-col justify-center"
+                      onClick={() => setLocation(`/progress/${categorySlug}`)}
+                    >
+                      <div className="text-xs font-bold text-emerald-400 mb-1">{lessonCount} {lessonCount === 1 ? 'Lesson' : 'Lessons'} Completed</div>
+                      <h4 className="font-bold text-lg">{categoryName}</h4>
+                    </div>
+                  );
+                });
+              })()
             )}
           </div>
         </section>
