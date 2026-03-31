@@ -20,7 +20,6 @@ Use these prompts with an AI (like ChatGPT or Gemini) to generate SQL commands f
 > - `content`: TEXT (Detailed educational content. Format strictly with an introductory paragraph, followed by contextually relevant bold section titles tailored to the specific topic (e.g., **The Core Idea**, **The Algorithm:**, **Mathematically:**, **Advantages:**, etc.). Do NOT use markdown headers like `##` or horizontal rules `---`. Use bullet points for lists.)
 > - `examples`: JSONB (Array of strings, e.g., `["Example 1", "Example 2"]`)
 > - `quiz`: JSONB (Array of objects: `{"question": string, "options": [{"id": "a", "text": "..."}, ...], "answer": "id"}`. Generate 5 questions for Beginner, 7-8 for Intermediate, and 10 for Advanced difficulty.)
-> - `icon`: TEXT (Single emoji)
 > 
 > **Output Format:**
 > Return ONLY the SQL command starting with `INSERT INTO lessons ...`. Use `::jsonb` for the JSON fields.
