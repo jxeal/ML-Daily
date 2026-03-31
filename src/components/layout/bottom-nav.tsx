@@ -30,7 +30,7 @@ export function BottomNav() {
                   strokeWidth={isActive ? 2.5 : 2}
                 />
               </div>
-              <span className={`text-[10px] font-medium mt-1 transition-colors duration-300 ${isActive ? 'text-foreground' : 'text-muted-foreground opacity-0 group-hover:opacity-100 translate-y-1 group-hover:translate-y-0'}`}>
+              <span className={`text-[10px] font-medium mt-1 transition-colors duration-300 ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
                 {item.label}
               </span>
               

@@ -33,43 +33,57 @@
 }
 
 :root {
-  /* Enforce dark mode purely for this app as requested */
-  --background: 240 10% 4%; /* #09090b */
-  --foreground: 0 0% 98%;
-
-  --card: 240 10% 8%; /* Slightly lighter than bg */
-  --card-foreground: 0 0% 98%;
-
-  --popover: 240 10% 8%;
-  --popover-foreground: 0 0% 98%;
-
-  /* Vibrant tech green for ML vibe */
-  --primary: 142 71% 45%; 
-  --primary-foreground: 144 100% 11%;
-
-  --secondary: 240 10% 15%;
-  --secondary-foreground: 0 0% 98%;
-
-  --muted: 240 10% 15%;
-  --muted-foreground: 240 5% 65%;
-
-  --accent: 280 80% 60%; /* Deep electric purple */
+  /* Creamy Light Mode */
+  --background: 40 30% 98%; /* #fdfbf7 */
+  --foreground: 240 10% 4%;
+  --card: 40 30% 95%;
+  --card-foreground: 240 10% 4%;
+  --popover: 40 30% 95%;
+  --popover-foreground: 240 10% 4%;
+  --primary: 142 71% 30%;
+  --primary-foreground: 144 100% 98%;
+  --secondary: 40 20% 90%;
+  --secondary-foreground: 240 10% 4%;
+  --muted: 40 20% 90%;
+  --muted-foreground: 240 5% 40%;
+  --accent: 280 80% 50%;
   --accent-foreground: 0 0% 98%;
-
   --destructive: 0 84% 60%;
   --destructive-foreground: 0 0% 98%;
+  --border: 40 20% 80%;
+  --input: 40 20% 80%;
+  --ring: 142 71% 30%;
+  --success: 142 71% 30%;
+  --success-foreground: 144 100% 98%;
+  --warning: 38 92% 40%;
+  --warning-foreground: 48 96% 98%;
+  --radius: 1rem;
+}
 
-  --success: 142 71% 45%;
-  --success-foreground: 144 100% 11%;
-
-  --warning: 38 92% 50%;
-  --warning-foreground: 48 96% 11%;
-
+.dark {
+  --background: 240 10% 4%; /* #09090b */
+  --foreground: 0 0% 98%;
+  --card: 240 10% 8%;
+  --card-foreground: 0 0% 98%;
+  --popover: 240 10% 8%;
+  --popover-foreground: 0 0% 98%;
+  --primary: 142 71% 45%;
+  --primary-foreground: 144 100% 11%;
+  --secondary: 240 10% 15%;
+  --secondary-foreground: 0 0% 98%;
+  --muted: 240 10% 15%;
+  --muted-foreground: 240 5% 65%;
+  --accent: 280 80% 60%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
   --border: 240 10% 20%;
   --input: 240 10% 20%;
   --ring: 142 71% 45%;
-  
-  --radius: 1rem;
+  --success: 142 71% 45%;
+  --success-foreground: 144 100% 11%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 48 96% 11%;
 }
 
 @layer base {
@@ -78,11 +92,9 @@
   }
   html {
     @apply bg-background text-foreground antialiased font-sans;
-    color-scheme: dark;
     -webkit-tap-highlight-color: transparent;
   }
   body {
-    /* Prevent pull-to-refresh highlighting and overflow bouncing on mobile */
     overscroll-behavior-y: none;
   }
   

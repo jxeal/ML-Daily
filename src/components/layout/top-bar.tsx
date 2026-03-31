@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useUserStats, useUpdateUserStats } from '@/hooks/use-supabase';
 import { Link, useLocation } from 'wouter';
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -57,6 +58,7 @@ export function TopBar() {
         </Link>
 
         <div className="flex items-center gap-3">
+          <ThemeToggle />
           <div className="flex items-center gap-1.5 bg-secondary/80 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/5">
             <Flame 
               className={`w-4 h-4 ${streak > 0 ? 'text-warning fill-warning' : 'text-muted-foreground'}`} 
