@@ -169,7 +169,7 @@ export function QuizSection({ lessonId, lessonCategory, quiz }: QuizSectionProps
             <button
               onClick={handleSubmit}
               disabled={!selectedId}
-              className="w-full bg-foreground text-background font-bold py-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/90 transition-colors"
+              className="w-full bg-foreground text-background font-bold py-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 transition-opacity"
             >
               Check Answer
             </button>

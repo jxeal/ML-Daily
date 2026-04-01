@@ -75,7 +75,7 @@ export default function LessonDetail() {
 
         {/* Content Body */}
         <div className="px-4 md:px-8 py-8 max-w-3xl mx-auto">
-          <div className="prose prose-invert prose-emerald max-w-none text-[1.1rem] leading-relaxed text-foreground/90">
+          <div className="prose dark:prose-invert prose-emerald max-w-none text-[1.1rem] leading-relaxed text-foreground/90 prose-headings:text-foreground prose-strong:text-foreground prose-code:text-foreground prose-li:marker:text-foreground">
             <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
               {lesson.content}
             </ReactMarkdown>
