@@ -6,6 +6,7 @@ import { CheckCircle2, Shield, Target, Lock, LogIn, BarChart } from "lucide-reac
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
+import { getCompletedCount, getCategoryCompletedCount } from "@/lib/lesson-utils";
 import { 
   BarChart as ReBarChart, 
   Bar, 
@@ -33,13 +34,14 @@ export default function Progress() {
   const streak = user ? (supabaseStats?.streak || 0) : useStatsStore.getState().streak;
   
   const total = lessons?.length || 1;
-  const completedCount = completedIds.length;
+  const completedCount = getCompletedCount(completedIds);
   const percent = Math.round((completedCount / total) * 100) || 0;
 
   // Calculate mastery by category
   const masteryData = categories?.map(cat => {
-    const catLessons = lessons?.filter(l => l.category === cat.name) || [];
-    const catCompleted = catLessons.filter(l => completedIds.includes(l.id)).length;
+    // Note: We use cat.id as the definitive progress key
+    const catLessons = lessons?.filter(l => l.category === cat.name || l.category === cat.id) || [];
+    const catCompleted = getCategoryCompletedCount(cat.id, completedIds);
     const catPercent = catLessons.length > 0 ? Math.round((catCompleted / catLessons.length) * 100) : 0;
     return {
       name: cat.name,
@@ -140,8 +142,8 @@ export default function Progress() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {categories?.map((cat) => {
-              const catLessons = lessons?.filter(l => l.category === cat.name) || [];
-              const catCompleted = catLessons.filter(l => completedIds.includes(l.id)).length;
+              const catLessons = lessons?.filter(l => l.category === cat.name || l.category === cat.id) || [];
+              const catCompleted = getCategoryCompletedCount(cat.id, completedIds);
               const catPercent = catLessons.length > 0 ? Math.round((catCompleted / catLessons.length) * 100) : 0;
               
               return (
@@ -236,27 +238,22 @@ export default function Progress() {
                </div>
             ) : (
               (() => {
-                const completedLessons = lessons?.filter(l => completedIds.includes(l.id)) || [];
-                const completedByCategory = completedLessons.reduce((acc, lesson) => {
-                  if (!lesson.category) return acc;
-                  if (!acc[lesson.category]) {
-                    acc[lesson.category] = [];
-                  }
-                  acc[lesson.category]!.push(lesson);
-                  return acc;
-                }, {} as Record<string, typeof lessons>);
+                // For "Recent Lessons Done", we'll show categories that have progress
+                const categoriesWithProgress = categories?.filter(cat => {
+                   return completedIds.some(entry => entry.startsWith(`${cat.id}:`));
+                }) || [];
 
-                return Object.entries(completedByCategory).map(([categoryName, catLessons], idx) => {
-                  const categorySlug = categoryName.toLowerCase().replace(/\s+/g, "-");
-                  const lessonCount = catLessons?.length || 0;
+                return categoriesWithProgress.map((cat) => {
+                  const categorySlug = cat.name.toLowerCase().replace(/\s+/g, "-");
+                  const lessonCount = getCategoryCompletedCount(cat.id, completedIds);
                   return (
                     <div 
-                      key={categoryName} 
+                      key={cat.id} 
                       className="p-4 rounded-2xl bg-card border border-white/5 shadow-sm hover:border-primary/50 transition-colors cursor-pointer flex flex-col justify-center"
-                      onClick={() => setLocation(`/progress/${categorySlug}`)}
+                      onClick={() => setLocation(`/progress/${cat.id}`)}
                     >
                       <div className="text-xs font-bold text-emerald-400 mb-1">{lessonCount} {lessonCount === 1 ? 'Lesson' : 'Lessons'} Completed</div>
-                      <h4 className="font-bold text-lg">{categoryName}</h4>
+                      <h4 className="font-bold text-lg">{cat.name}</h4>
                     </div>
                   );
                 });
