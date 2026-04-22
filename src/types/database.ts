@@ -24,6 +24,7 @@ export interface Lesson {
   quiz: QuizQuestion[];
   icon: string;
   xp_reward?: number;
+  lesson_number: number;
 }
 
 export interface DailyChallenge {

@@ -1,17 +1,56 @@
-import { useRoute, Link } from "wouter";
-import { useGetLessonById } from "@/hooks/use-supabase";
+import { useRoute, Link, useLocation } from "wouter";
+import { useGetLessonById, useUserStats } from "@/hooks/use-supabase";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
-import { ArrowLeft, Loader2, BookOpen } from "lucide-react";
+import { ArrowLeft, Loader2, BookOpen, Lock } from "lucide-react";
 import { AppLayout } from "@/components/layout/app-layout";
 import { QuizSection } from "@/components/ui/quiz-section";
+import { useAuth } from "@/components/auth/auth-provider";
+import { useStatsStore } from "@/store/use-stats";
+import { useEffect } from "react";
+import { isLessonUnlocked } from "@/lib/lesson-utils";
 
 export default function LessonDetail() {
   const [, params] = useRoute("/lessons/:id");
   const id = params?.id;
+  const [, setLocation] = useLocation();
 
   const { data: lesson, isLoading, error } = useGetLessonById(id || "");
+  const { user } = useAuth();
+  const { data: supabaseStats } = useUserStats();
+  const localCompleted = useStatsStore(state => state.completedLessons);
+
+  const completedLessons = user ? supabaseStats?.completed_lessons || [] : localCompleted;
+
+  const isUnlocked = lesson ? isLessonUnlocked(
+    lesson.lesson_number,
+    lesson.category,
+    completedLessons,
+    !!user
+  ) : true;
+
+  // Security check: if the lesson is locked, redirect or show lock screen
+  if (!isLoading && lesson && !isUnlocked) {
+    return (
+      <AppLayout hideNav>
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center max-w-md mx-auto">
+          <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center mb-6">
+            <Lock className="w-10 h-10 text-destructive" />
+          </div>
+          <h2 className="text-3xl font-display font-bold mb-4">Lesson Locked</h2>
+          <p className="text-muted-foreground mb-8">
+            {!user 
+              ? "This lesson is reserved for signed-in members. Create an account to unlock the full curriculum!" 
+              : "You need to complete the previous lesson in this category before you can start this one."}
+          </p>
+          <Link href={user ? "/categories" : "/auth"} className="bg-primary text-primary-foreground px-8 py-3 rounded-xl font-bold hover:opacity-90 transition-opacity">
+            {user ? "Back to Learning" : "Sign Up Now"}
+          </Link>
+        </div>
+      </AppLayout>
+    );
+  }
 
   if (isLoading) {
     return (
@@ -104,7 +143,12 @@ export default function LessonDetail() {
           )}
 
           {/* Quiz Section */}
-          <QuizSection lessonId={lesson.id} lessonCategory={lesson.category} quiz={lesson.quiz} />
+          <QuizSection 
+            lessonId={lesson.id} 
+            lessonCategory={lesson.category} 
+            lessonNumber={lesson.lesson_number}
+            quiz={lesson.quiz} 
+          />
         </div>
       </div>
     </AppLayout>

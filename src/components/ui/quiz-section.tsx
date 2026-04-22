@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { type QuizQuestion } from '@/types/database';
+import { type QuizQuestion, type Lesson } from '@/types/database';
 import { CheckCircle2, XCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useStatsStore } from '@/store/use-stats';
@@ -7,14 +7,16 @@ import { useLocation } from 'wouter';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/components/auth/auth-provider';
 import { useUpdateUserStats, useUserStats, useGetLessonsByCategory } from '@/hooks/use-supabase';
+import { getUpdatedCompletedLessons } from '@/lib/lesson-utils';
 
 interface QuizSectionProps {
   lessonId: string;
   lessonCategory?: string;
+  lessonNumber?: number;
   quiz: QuizQuestion[];
 }
 
-export function QuizSection({ lessonId, lessonCategory, quiz }: QuizSectionProps) {
+export function QuizSection({ lessonId, lessonCategory, lessonNumber, quiz }: QuizSectionProps) {
   const { user } = useAuth();
   const { data: supabaseStats } = useUserStats();
   const updateStats = useUpdateUserStats();
@@ -23,7 +25,7 @@ export function QuizSection({ lessonId, lessonCategory, quiz }: QuizSectionProps
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [, setLocation] = useLocation();
-  const completeLesson = useStatsStore(state => state.completeLesson);
+  const completeLessonStore = useStatsStore(state => state.completeLesson);
   const localCompleted = useStatsStore(state => state.completedLessons);
 
   const { data: categoryLessons } = useGetLessonsByCategory(lessonCategory || "");
@@ -47,13 +49,24 @@ export function QuizSection({ lessonId, lessonCategory, quiz }: QuizSectionProps
       setIsSubmitted(false);
     } else {
       // Finished all questions
-      completeLesson(lessonId);
+      completeLessonStore(lessonId);
       
       // Sync to Supabase if logged in
       if (user && supabaseStats) {
-        const completedLessons = Array.from(new Set([...supabaseStats.completed_lessons, lessonId]));
+        // Core lesson ID for legacy tracking (badges/stats)
+        let updatedList = Array.from(new Set([...supabaseStats.completed_lessons, lessonId]));
+        
+        // New formatted progress: "category: chapter X"
+        if (lessonCategory && typeof lessonNumber === 'number') {
+          updatedList = getUpdatedCompletedLessons(
+            updatedList,
+            lessonCategory,
+            lessonNumber
+          );
+        }
+
         const xp = supabaseStats.xp + 10;
-        updateStats.mutate({ completed_lessons: completedLessons, xp });
+        updateStats.mutate({ completed_lessons: updatedList, xp });
       }
 
       setIsFinished(true);
