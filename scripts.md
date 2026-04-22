@@ -12,28 +12,30 @@ Use these prompts with an AI (like ChatGPT or Gemini) to generate SQL commands f
 > **Difficulty:** [Choose from: Beginner, Intermediate, Advanced]
 > 
 > **Table Schema:**
-> - `id`: TEXT (slug format, e.g., 'neural-networks')
+> - `id`: UUID (Generate a random UUID)
 > - `title`: TEXT
-> - `category`: TEXT
+> - `category`: TEXT (The UUID or Name of the category)
 > - `difficulty`: TEXT
+> - `lesson_number`: INTEGER (Sequence number starting from 0 for 'Introduction')
+> - `xp_reward`: INTEGER (Range: 20 for Beginner, 50 for Intermediate, 100 for Advanced)
 > - `short_description`: TEXT (1-2 sentences)
-> - `content`: TEXT (Detailed educational content. Format strictly with an introductory paragraph, followed by contextually relevant bold section titles tailored to the specific topic (e.g., **The Core Idea**, **The Algorithm:**, **Mathematically:**, **Advantages:**, etc.). Do NOT use markdown headers like `##` or horizontal rules `---`. Use bullet points for lists.)
-> - `examples`: JSONB (Array of strings, e.g., `["Example 1", "Example 2"]`)
-> - `quiz`: JSONB (Array of objects: `{"question": string, "options": [{"id": "a", "text": "..."}, ...], "answer": "id"}`. Generate 5 questions for Beginner, 7-8 for Intermediate, and 10 for Advanced difficulty.)
+> - `content`: TEXT (Detailed educational content in Markdown. Use `![align|Caption](url)` for images where `align` is `left`, `right`, or `center`. Format with bold section titles like **The Core Idea**. Do NOT use `##` or `---`.)
+> - `examples`: JSONB (Array of strings)
+> - `quiz`: JSONB (Array of objects: `{"question": string, "options": [{"id": "a", "text": "..."}, ...], "answer": "id"}`)
 > 
 > **Output Format:**
-> Return ONLY the SQL command starting with `INSERT INTO lessons ...`. Use `::jsonb` for the JSON fields.
+> Return ONLY the SQL command. Use `::jsonb` for JSON fields.
 
 ---
 
 ## 2. Update an Existing Lesson
 **Prompt:**
 > Generate a PostgreSQL `UPDATE` command for the `lessons` table.
-> **Target Lesson ID:** [INSERT SLUG HERE, e.g., 'neural-networks']
-> **Change Requested:** [Describe what to add or change, e.g., "Add more info about CNNs"]
+> **Target Lesson Number & Category:** [e.g., Lesson 1 in Machine Learning]
+> **Change Requested:** [Describe change]
 > 
 > **Output Format:**
-> Return ONLY the SQL command starting with `UPDATE lessons SET ... WHERE id = '...';`. Use `::jsonb` for any JSON field updates.
+> Return ONLY the SQL command.
 
 ---
 
