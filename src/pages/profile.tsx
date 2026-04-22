@@ -282,23 +282,31 @@ export default function Profile({ params }: { params?: { username?: string } }) 
 
         {/* Quick Stats Grid */}
         <section className="grid grid-cols-2 gap-4">
-          <div className="bg-card rounded-3xl p-5 border border-white/5 flex items-center justify-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
-              <Flame className="w-6 h-6 text-orange-500 fill-orange-500" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold font-display leading-none">{stats.streak}</span>
-              <span className="text-sm font-medium text-muted-foreground">Day Streak</span>
+          <div className="bg-card rounded-3xl p-6 border border-white/5 flex flex-col items-center justify-center transition-transform hover:scale-[1.02]">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Day Streak</span>
+            <div className="flex items-center justify-center">
+              <div className="w-12 flex justify-center">
+                <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center shrink-0">
+                  <Flame className="w-5 h-5 text-orange-500 fill-orange-500" />
+                </div>
+              </div>
+              <div className="w-12 flex justify-center">
+                <span className="text-3xl font-bold font-display leading-none tabular-nums">{stats.streak}</span>
+              </div>
             </div>
           </div>
 
-          <div className="bg-card rounded-3xl p-5 border border-white/5 flex items-center justify-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <Zap className="w-6 h-6 text-primary fill-primary" />
-            </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold font-display leading-none">{stats.xp}</span>
-              <span className="text-sm font-medium text-muted-foreground">Total XP</span>
+          <div className="bg-card rounded-3xl p-6 border border-white/5 flex flex-col items-center justify-center transition-transform hover:scale-[1.02]">
+            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3">Total XP</span>
+            <div className="flex items-center justify-center">
+              <div className="w-12 flex justify-center">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                  <Zap className="w-5 h-5 text-primary fill-primary" />
+                </div>
+              </div>
+              <div className="w-12 flex justify-center">
+                <span className="text-3xl font-bold font-display leading-none tabular-nums">{stats.xp}</span>
+              </div>
             </div>
           </div>
         </section>

@@ -70,21 +70,16 @@ export default function ProgressCategory() {
               ))}
             </div>
           ) : completedLessons.length > 0 ? (
-            <div className="bg-card border border-white/5 rounded-2xl overflow-hidden">
-              <div className="flex flex-col divide-y divide-white/5">
-                {completedLessons.map((lesson, idx) => (
-                  <div 
-                    key={lesson.id}
-                    className="w-full p-4 cursor-pointer hover:bg-white/5 transition-colors flex items-center justify-between"
-                    onClick={() => setLocation(`/lessons/${lesson.id}`)}
-                  >
-                    <div>
-                      <h4 className="font-bold text-base">{lesson.title}</h4>
-                      <div className="text-xs text-muted-foreground mt-1 line-clamp-1">{lesson.short_description || "Completed lesson"}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <div className="flex flex-col gap-3">
+              {completedLessons.map((lesson, idx) => (
+                <LessonCard 
+                  key={lesson.id} 
+                  lesson={lesson} 
+                  index={idx} 
+                  variant="list" 
+                  categoryId={actualCategoryId} 
+                />
+              ))}
             </div>
           ) : (
             <div className="bg-card p-12 rounded-3xl border border-dashed border-white/10 flex flex-col items-center justify-center text-center">

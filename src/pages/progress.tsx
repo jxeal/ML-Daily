@@ -151,7 +151,8 @@ export default function Progress() {
                   key={cat.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="bg-card border border-white/5 rounded-3xl p-5 hover:border-white/10 transition-colors group"
+                  className="bg-card border border-white/5 rounded-3xl p-5 hover:border-primary/30 transition-all cursor-pointer group active:scale-[0.98]"
+                  onClick={() => setLocation(`/categories/${cat.name.toLowerCase().replace(/\s+/g, "-")}`)}
                 >
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
@@ -249,8 +250,8 @@ export default function Progress() {
                   return (
                     <div 
                       key={cat.id} 
-                      className="p-4 rounded-2xl bg-card border border-white/5 shadow-sm hover:border-primary/50 transition-colors cursor-pointer flex flex-col justify-center"
-                      onClick={() => setLocation(`/progress/${cat.id}`)}
+                      className="p-4 rounded-2xl bg-card border border-white/5 shadow-sm hover:border-primary/50 transition-all cursor-pointer flex flex-col justify-center active:scale-95"
+                      onClick={() => setLocation(`/progress/${categorySlug}`)}
                     >
                       <div className="text-xs font-bold text-emerald-400 mb-1">{lessonCount} {lessonCount === 1 ? 'Lesson' : 'Lessons'} Completed</div>
                       <h4 className="font-bold text-lg">{cat.name}</h4>
