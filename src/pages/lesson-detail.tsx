@@ -83,13 +83,13 @@ export default function LessonDetail() {
       <div className="animate-in slide-in-from-bottom-4 duration-500 pb-20">
         {/* Header Hero */}
         <div className="relative pt-6 px-4 md:px-8 pb-12 border-b border-white/5 bg-gradient-to-b from-card to-background">
-          <Link
-            href={`/categories/${(lesson.category || "").toLowerCase().replace(/\s+/g, "-")}`}
-            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors"
+          <button 
+            onClick={() => window.history.length > 1 ? window.history.back() : setLocation(`/categories/${(lesson.category || "").toLowerCase().replace(/\s+/g, "-")}`)}
+            className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
             <span className="font-medium text-sm">Back</span>
-          </Link>
+          </button>
 
           <div className="flex items-center gap-3 mb-4">
             {/* <span className="text-4xl bg-secondary/50 p-3 rounded-2xl">

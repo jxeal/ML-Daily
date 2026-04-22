@@ -2,10 +2,11 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { LessonCard } from "@/components/ui/lesson-card";
 import { useGetLessonsByCategory, useGetCategoryById } from "@/hooks/use-supabase";
 import { Loader2, ArrowLeft } from "lucide-react";
-import { Link, useRoute } from "wouter";
+import { Link, useRoute, useLocation } from "wouter";
 import { motion } from "framer-motion";
 
 export default function CategoryDetail() {
+  const [, setLocation] = useLocation();
   const [, params] = useRoute("/categories/:id");
   const categoryId = params?.id || "";
   
@@ -24,10 +25,13 @@ export default function CategoryDetail() {
         
         {/* Header */}
         <div className="flex flex-col gap-4">
-          <Link href="/categories" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors w-fit">
+          <button 
+            onClick={() => window.history.length > 1 ? window.history.back() : setLocation("/categories")}
+            className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors w-fit cursor-pointer"
+          >
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back to Explore</span>
-          </Link>
+            <span className="text-sm font-medium">Go Back</span>
+          </button>
           
           {isLoadingCategory ? (
             <div className="h-10 w-48 bg-card animate-pulse rounded-lg" />

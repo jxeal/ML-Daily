@@ -36,10 +36,13 @@ export default function ProgressCategory() {
         
         {/* Header */}
         <div className="flex flex-col gap-4">
-          <Link href="/progress" className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors w-fit">
+          <button 
+            onClick={() => window.history.length > 1 ? window.history.back() : setLocation("/progress")}
+            className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors w-fit cursor-pointer"
+          >
             <ArrowLeft className="w-4 h-4" />
-            <span className="text-sm font-medium">Back to Progress</span>
-          </Link>
+            <span className="text-sm font-medium">Go Back</span>
+          </button>
           
           {isLoadingCategory ? (
             <div className="h-10 w-48 bg-card animate-pulse rounded-lg" />
