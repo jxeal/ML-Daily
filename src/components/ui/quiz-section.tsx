@@ -30,7 +30,9 @@ export function QuizSection({ lessonId, lessonCategory, lessonNumber, quiz }: Qu
 
   const { data: categoryLessons } = useGetLessonsByCategory(lessonCategory || "");
   const completedLessons = user && supabaseStats ? supabaseStats.completed_lessons : localCompleted;
-  const nextLesson = categoryLessons?.find(l => l.id !== lessonId && !completedLessons.includes(l.id));
+  
+  // Find next lesson: the one with lesson_number = current + 1 in current category
+  const nextLesson = categoryLessons?.find(l => l.lesson_number === (lessonNumber || 0) + 1);
 
   if (!quiz || quiz.length === 0) return null;
 
@@ -102,7 +104,9 @@ export function QuizSection({ lessonId, lessonCategory, lessonNumber, quiz }: Qu
                 setCurrentIdx(0);
                 setSelectedId(null);
                 setIsSubmitted(false);
-                setLocation(`/lessons/${nextLesson.id}`);
+                const nextSlug = (lessonCategory || "").toLowerCase().replace(/\s+/g, "-");
+                const nextNum = nextLesson.lesson_number === 0 ? "intro" : nextLesson.lesson_number;
+                setLocation(`/lessons/${nextSlug}/${nextNum}`);
               }}
               className="bg-primary text-primary-foreground font-bold px-8 py-4 rounded-xl w-full sm:w-auto hover:opacity-90 transition-opacity"
             >

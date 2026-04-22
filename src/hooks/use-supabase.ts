@@ -11,10 +11,28 @@ export function useGetLessons() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("lessons")
-        .select("*")
+        .select(`
+          *,
+          categories:category (
+            name
+          )
+        `)
         .order("lesson_number", { ascending: true });
-      if (error) throw error;
-      return data as Lesson[];
+      
+      if (error) {
+        // Fallback if the join fails
+        const { data: simpleData, error: simpleError } = await supabase
+          .from("lessons")
+          .select("*")
+          .order("lesson_number", { ascending: true });
+        if (simpleError) throw simpleError;
+        return simpleData as Lesson[];
+      }
+
+      return (data as any[]).map(lesson => ({
+        ...lesson,
+        category_name: lesson.categories?.name
+      })) as Lesson[];
     },
   });
 }
@@ -32,6 +50,40 @@ export function useGetLessonById(id: string) {
       return data as Lesson;
     },
     enabled: !!id,
+  });
+}
+
+export function useGetLessonByNumber(categorySlug: string, lessonNumber: number) {
+  return useQuery<Lesson>({
+    queryKey: ["lessons", categorySlug, lessonNumber],
+    queryFn: async () => {
+      // Find category first to get actual name/id
+      const categoryName = categorySlug.split("-").join(" ");
+      
+      const { data: categoryData, error: catError } = await supabase
+        .from("categories")
+        .select("id, name")
+        .ilike("name", categoryName)
+        .maybeSingle();
+      
+      if (catError) throw catError;
+      if (!categoryData) throw new Error("Category not found");
+
+      const { data, error } = await supabase
+        .from("lessons")
+        .select("*")
+        .eq("lesson_number", lessonNumber)
+        .or(`category.eq.${categoryData.id},category.ilike.${categoryData.name}`)
+        .maybeSingle();
+      
+      if (error) throw error;
+      if (!data) throw new Error("Lesson not found");
+      return {
+        ...data,
+        category_name: categoryData.name
+      } as Lesson;
+    },
+    enabled: !!categorySlug,
   });
 }
 
@@ -88,7 +140,12 @@ export function useGetLessonsByCategory(
   return useQuery<Lesson[]>({
     queryKey: ["lessons", "category", categoryName, categoryId],
     queryFn: async () => {
-      let query = supabase.from("lessons").select("*");
+      let query = supabase.from("lessons").select(`
+        *,
+        categories:category (
+          name
+        )
+      `);
 
       if (categoryId && categoryName) {
         query = query.or(
@@ -103,8 +160,23 @@ export function useGetLessonsByCategory(
       }
 
       const { data, error } = await query.order("lesson_number", { ascending: true });
-      if (error) throw error;
-      return data as Lesson[];
+      
+      if (error) {
+        // Fallback
+        let fallbackQuery = supabase.from("lessons").select("*");
+        if (categoryId && categoryName) fallbackQuery = fallbackQuery.or(`category.ilike.${categoryName},category.eq.${categoryId}`);
+        else if (categoryName) fallbackQuery = fallbackQuery.ilike("category", categoryName);
+        else if (categoryId) fallbackQuery = fallbackQuery.eq("category", categoryId);
+        
+        const { data: fallbackData, error: fallbackError } = await fallbackQuery.order("lesson_number", { ascending: true });
+        if (fallbackError) throw fallbackError;
+        return fallbackData as Lesson[];
+      }
+
+      return (data as any[]).map(lesson => ({
+        ...lesson,
+        category_name: lesson.categories?.name
+      })) as Lesson[];
     },
     enabled: !!categoryName || !!categoryId,
   });

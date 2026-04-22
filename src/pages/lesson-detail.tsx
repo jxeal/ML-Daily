@@ -1,5 +1,5 @@
 import { useRoute, Link, useLocation } from "wouter";
-import { useGetLessonById, useUserStats, useGetCategoryById } from "@/hooks/use-supabase";
+import { useGetLessonByNumber, useUserStats, useGetCategoryById } from "@/hooks/use-supabase";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
@@ -12,13 +12,16 @@ import { useEffect } from "react";
 import { isLessonUnlocked } from "@/lib/lesson-utils";
 
 export default function LessonDetail() {
-  const [, params] = useRoute("/lessons/:id");
-  const id = params?.id;
+  const [, params] = useRoute("/lessons/:category/:lessonNumber");
+  const categorySlug = params?.category || "";
+  const lessonNumberParam = params?.lessonNumber || "intro";
+  
+  const lessonNumber = lessonNumberParam === "intro" ? 0 : parseInt(lessonNumberParam, 10);
   const [, setLocation] = useLocation();
 
-  const { data: lesson, isLoading, error } = useGetLessonById(id || "");
-  const { data: categoryData } = useGetCategoryById(lesson?.category || "");
-  const catIdToUse = categoryData?.id || lesson?.category || "";
+  const { data: lesson, isLoading, error } = useGetLessonByNumber(categorySlug, lessonNumber);
+  const { data: categoryData } = useGetCategoryById(categorySlug);
+  const catIdToUse = categoryData?.id || categorySlug;
 
   const { user } = useAuth();
   const { data: supabaseStats } = useUserStats();
@@ -31,7 +34,7 @@ export default function LessonDetail() {
     catIdToUse,
     completedLessons,
     !!user
-  ) : true;
+  ) : (lessonNumber === 0); // Intro is always unlocked even if lesson data not loaded yet
 
   // Security check: if the lesson is locked, redirect or show lock screen
   if (!isLoading && lesson && !isUnlocked) {
@@ -84,7 +87,7 @@ export default function LessonDetail() {
         {/* Header Hero */}
         <div className="relative pt-6 px-4 md:px-8 pb-12 border-b border-white/5 bg-gradient-to-b from-card to-background">
           <button 
-            onClick={() => window.history.length > 1 ? window.history.back() : setLocation(`/categories/${(lesson.category || "").toLowerCase().replace(/\s+/g, "-")}`)}
+            onClick={() => window.history.length > 1 ? window.history.back() : setLocation(`/categories/${categorySlug}`)}
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-8 transition-colors cursor-pointer"
           >
             <ArrowLeft className="w-4 h-4" />
@@ -118,7 +121,52 @@ export default function LessonDetail() {
         {/* Content Body */}
         <div className="px-4 md:px-8 py-8 max-w-3xl mx-auto">
           <div className="prose dark:prose-invert prose-emerald max-w-none text-[1.1rem] leading-relaxed text-foreground/90 prose-headings:text-foreground prose-strong:text-foreground prose-code:text-foreground prose-li:marker:text-foreground">
-            <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]}>
+            <ReactMarkdown 
+              remarkPlugins={[remarkGfm, remarkBreaks]}
+              components={{
+                p: ({ node, children }) => {
+                  // Check AST to see if this paragraph contains an image
+                  const hasImage = (node as any)?.children?.some((child: any) => child.tagName === 'img');
+                  
+                  if (hasImage) {
+                    return <div className="mb-6">{children}</div>;
+                  }
+                  return <p className="mb-6 last:mb-0">{children}</p>;
+                },
+                img: ({ node, ...props }) => {
+                  const alt = props.alt || "";
+                  const hasFormat = alt.includes("|");
+                  const [formatPart, caption] = hasFormat ? alt.split("|") : ["", alt];
+                  
+                  let containerClass = "my-10 clear-both flex flex-col";
+
+                  if (formatPart.toLowerCase().includes("left")) {
+                    containerClass = "md:float-left md:mr-8 md:mb-6 md:mt-2 md:max-w-[45%] w-full clear-none flex flex-col items-center";
+                  } else if (formatPart.toLowerCase().includes("right")) {
+                    containerClass = "md:float-right md:ml-8 md:mb-6 md:mt-2 md:max-w-[45%] w-full clear-none flex flex-col items-center";
+                  } else if (formatPart.toLowerCase().includes("full")) {
+                    containerClass = "w-full my-12 flex flex-col items-center";
+                  } else {
+                    containerClass = "my-10 flex flex-col items-center justify-center mx-auto";
+                  }
+
+                  return (
+                    <figure className={containerClass}>
+                      <img 
+                        {...props} 
+                        className="rounded-2xl shadow-xl border border-white/10 w-full object-cover max-h-[500px]" 
+                        referrerPolicy="no-referrer"
+                      />
+                      {caption && caption.trim() && (
+                        <figcaption className="mt-4 text-[0.9rem] text-muted-foreground text-center italic font-medium px-4 max-w-sm">
+                          {caption.trim()}
+                        </figcaption>
+                      )}
+                    </figure>
+                  );
+                }
+              }}
+            >
               {lesson.content}
             </ReactMarkdown>
           </div>

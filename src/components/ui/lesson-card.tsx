@@ -12,12 +12,14 @@ export const LessonCard = memo(function LessonCard({
   lesson,
   index = 0,
   variant = "card",
-  categoryId
+  categoryId,
+  categoryName
 }: {
   lesson: Lesson;
   index?: number;
   variant?: "card" | "list";
   categoryId?: string;
+  categoryName?: string;
 }) {
   const { user } = useAuth();
   const { data: supabaseStats } = useUserStats();
@@ -29,18 +31,31 @@ export const LessonCard = memo(function LessonCard({
     ? supabaseStats?.completed_lessons || [] 
     : localCompletedLessons;
 
-  const currentCategoryId = categoryId || lesson.category;
+  // Use the explicitly passed categoryName, or lesson.category if it's likely a name
+  const isUuid = (str: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+  const isNumeric = (str: string) => /^\d+$/.test(str);
+  
+  // Prioritize categoryName (passed prop), then lesson.category_name (joined name), then lesson.category
+  const displayCategory = categoryName || lesson.category_name ||
+    (!isNumeric(lesson.category) && !isUuid(lesson.category) ? lesson.category : (categoryId && !isNumeric(categoryId) && !isUuid(categoryId) ? categoryId : "topic"));
+    
+  const categorySlug = displayCategory.toLowerCase().replace(/\s+/g, '-');
+  const lessonNumSlug = lesson.lesson_number === 0 ? 'intro' : lesson.lesson_number;
+  const lessonHref = `/lessons/${categorySlug}/${lessonNumSlug}`;
+
+  // For logic, we prefer the actual ID (UUID or numeric ID) 
+  const catIdForLogic = categoryId || lesson.category;
 
   const isCompleted = isLessonCompleted(
     lesson.id,
     lesson.lesson_number,
-    currentCategoryId,
+    catIdForLogic,
     completedLessons
   );
   
   const isUnlocked = isLessonUnlocked(
     lesson.lesson_number,
-    currentCategoryId,
+    catIdForLogic,
     completedLessons,
     !!user
   );
@@ -74,7 +89,7 @@ export const LessonCard = memo(function LessonCard({
   if (variant === "list") {
     return (
       <Link 
-        href={isUnlocked ? `/lessons/${lesson.id}` : "#"} 
+        href={isUnlocked ? lessonHref : "#"} 
         onClick={handleLockedClick}
         className={`block group ${!isUnlocked ? "cursor-not-allowed" : ""}`}
       >
@@ -87,13 +102,13 @@ export const LessonCard = memo(function LessonCard({
           <div className="flex-shrink-0 w-8 flex justify-center items-center">
             {isCompleted ? (
               <div className="w-6 h-6 rounded-full border-2 border-emerald-700 flex items-center justify-center text-[11px] font-bold text-emerald-700">
-                {lesson.lesson_number === 0 ? "Int" : `${lesson.lesson_number}`}
+                {lesson.lesson_number}
               </div>
             ) : !isUnlocked ? (
               <Lock className="w-4 h-4 text-muted-foreground" />
             ) : (
               <span className="text-sm font-mono text-muted-foreground font-bold">
-                {lesson.lesson_number === 0 ? "Intro" : `${lesson.lesson_number}`}
+                {lesson.lesson_number === 0 ? "Intro." : `${lesson.lesson_number}.`}
               </span>
             )}
           </div>
@@ -137,7 +152,7 @@ export const LessonCard = memo(function LessonCard({
 
   return (
     <Link 
-      href={isUnlocked ? `/lessons/${lesson.id}` : "#"} 
+      href={isUnlocked ? lessonHref : "#"} 
       onClick={handleLockedClick}
       className={`block group ${!isUnlocked ? "cursor-not-allowed" : ""}`}
     >

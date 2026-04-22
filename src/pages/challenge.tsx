@@ -1,4 +1,4 @@
-import { useRoute, Link } from "wouter";
+import { useRoute, Link, useLocation } from "wouter";
 import { useGetDailyChallenge, useUserStats, useUpdateUserStats } from "@/hooks/use-supabase";
 import { ArrowLeft, Loader2, Zap } from "lucide-react";
 import { AppLayout } from "@/components/layout/app-layout";
@@ -8,6 +8,9 @@ import confetti from "canvas-confetti";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/components/auth/auth-provider";
 import { format } from "date-fns";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 
 export default function DailyChallenge() {
   const { user } = useAuth();
@@ -15,11 +18,56 @@ export default function DailyChallenge() {
   const updateStats = useUpdateUserStats();
   const [, params] = useRoute("/challenge/:id");
   const { data: challenge, isLoading } = useGetDailyChallenge();
-  
+  const [, setLocation] = useLocation();
+
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const completeDailyChallenge = useStatsStore(state => state.completeDailyChallenge);
+
+  // Custom Markdown components shared for consistent rendering and fixing hydration errors
+  const MarkdownComponents = {
+    p: ({ node, children }: any) => {
+      const hasImage = node?.children?.some((child: any) => child.tagName === 'img');
+      
+      if (hasImage) {
+        return <div className="mb-6">{children}</div>;
+      }
+      return <p className="mb-6 last:mb-0">{children}</p>;
+    },
+    img: ({ node, ...props }: any) => {
+      const alt = props.alt || "";
+      const hasFormat = alt.includes("|");
+      const [formatPart, caption] = hasFormat ? alt.split("|") : ["", alt];
+      
+      let containerClass = "my-10 clear-both flex flex-col";
+
+      if (formatPart.toLowerCase().includes("left")) {
+        containerClass = "md:float-left md:mr-8 md:mb-6 md:mt-2 md:max-w-[45%] w-full clear-none flex flex-col items-center";
+      } else if (formatPart.toLowerCase().includes("right")) {
+        containerClass = "md:float-right md:ml-8 md:mb-6 md:mt-2 md:max-w-[45%] w-full clear-none flex flex-col items-center";
+      } else if (formatPart.toLowerCase().includes("full")) {
+        containerClass = "w-full my-12 flex flex-col items-center";
+      } else {
+        containerClass = "my-10 flex flex-col items-center justify-center mx-auto";
+      }
+
+      return (
+        <figure className={containerClass}>
+          <img 
+            {...props} 
+            className="rounded-2xl shadow-xl border border-white/10 w-full object-cover max-h-[500px]" 
+            referrerPolicy="no-referrer"
+          />
+          {caption && caption.trim() && (
+            <figcaption className="mt-4 text-[0.9rem] text-muted-foreground text-center italic font-medium px-4 max-w-sm">
+              {caption.trim()}
+            </figcaption>
+          )}
+        </figure>
+      );
+    }
+  };
 
   if (isLoading) return (
     <AppLayout hideNav>
@@ -85,7 +133,11 @@ export default function DailyChallenge() {
             
             <div className="bg-card p-6 rounded-2xl border border-white/5 mb-8 text-left">
               <h4 className="font-bold text-accent mb-2">Explanation</h4>
-              <p className="text-foreground/80 leading-relaxed">{challenge.explanation}</p>
+              <div className="prose dark:prose-invert prose-emerald max-w-none text-foreground/80 leading-relaxed">
+                <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} components={MarkdownComponents}>
+                  {challenge.explanation}
+                </ReactMarkdown>
+              </div>
             </div>
 
             <Link href="/">
@@ -101,7 +153,11 @@ export default function DailyChallenge() {
               <h1 className="text-2xl font-display font-bold">Daily Challenge</h1>
             </div>
 
-            <h2 className="text-2xl leading-relaxed font-medium mb-8">{challenge.question}</h2>
+            <div className="prose dark:prose-invert prose-emerald max-w-none mb-8">
+              <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} components={MarkdownComponents}>
+                {challenge.question}
+              </ReactMarkdown>
+            </div>
 
             <div className="space-y-4 mb-8">
               {challenge.options.map(opt => {
@@ -150,7 +206,11 @@ export default function DailyChallenge() {
                   <motion.div key="wrong" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
                     <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-2xl mb-6">
                       <h4 className="font-bold text-red-400 mb-2">Incorrect</h4>
-                      <p className="text-sm text-foreground/80">{challenge.explanation}</p>
+                      <div className="prose dark:prose-invert prose-emerald max-w-none text-sm text-foreground/80">
+                        <ReactMarkdown remarkPlugins={[remarkGfm, remarkBreaks]} components={MarkdownComponents}>
+                          {challenge.explanation}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                     <button
                       onClick={() => { setIsSubmitted(false); setSelectedId(null); }}

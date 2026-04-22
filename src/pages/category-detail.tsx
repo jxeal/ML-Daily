@@ -70,6 +70,7 @@ export default function CategoryDetail() {
                   index={idx} 
                   variant="list" 
                   categoryId={actualCategoryId} 
+                  categoryName={categoryName}
                 />
               ))}
             </div>

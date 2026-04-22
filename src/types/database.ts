@@ -17,12 +17,13 @@ export interface Lesson {
   id: string;
   title: string;
   category: string;
+  category_name?: string;
   difficulty: string;
   short_description: string;
   content: string;
   examples: string[];
   quiz: QuizQuestion[];
-  icon: string;
+  icon?: string;
   xp_reward?: number;
   lesson_number: number;
 }

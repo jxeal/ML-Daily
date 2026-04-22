@@ -81,6 +81,7 @@ export default function ProgressCategory() {
                   index={idx} 
                   variant="list" 
                   categoryId={actualCategoryId} 
+                  categoryName={categoryName}
                 />
               ))}
             </div>
