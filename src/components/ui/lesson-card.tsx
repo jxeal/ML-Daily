@@ -5,15 +5,19 @@ import { useStatsStore } from "@/store/use-stats";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useUserStats } from "@/hooks/use-supabase";
 import { memo } from "react";
-import { isLessonUnlocked } from "@/lib/lesson-utils";
+import { isLessonUnlocked, isLessonCompleted } from "@/lib/lesson-utils";
 import { toast } from "@/hooks/use-toast";
 
 export const LessonCard = memo(function LessonCard({
   lesson,
   index = 0,
+  variant = "card",
+  categoryId
 }: {
   lesson: Lesson;
   index?: number;
+  variant?: "card" | "list";
+  categoryId?: string;
 }) {
   const { user } = useAuth();
   const { data: supabaseStats } = useUserStats();
@@ -25,11 +29,18 @@ export const LessonCard = memo(function LessonCard({
     ? supabaseStats?.completed_lessons || [] 
     : localCompletedLessons;
 
-  const isCompleted = completedLessons.includes(lesson.id);
+  const currentCategoryId = categoryId || lesson.category;
+
+  const isCompleted = isLessonCompleted(
+    lesson.id,
+    lesson.lesson_number,
+    currentCategoryId,
+    completedLessons
+  );
   
   const isUnlocked = isLessonUnlocked(
     lesson.lesson_number,
-    lesson.category,
+    currentCategoryId,
     completedLessons,
     !!user
   );
@@ -37,13 +48,13 @@ export const LessonCard = memo(function LessonCard({
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case "Beginner":
-        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+        return "text-emerald-400";
       case "Intermediate":
-        return "bg-warning/10 text-warning border-warning/20";
+        return "text-warning";
       case "Advanced":
-        return "bg-destructive/10 text-destructive border-destructive/20";
+        return "text-destructive";
       default:
-        return "bg-primary/10 text-primary border-primary/20";
+        return "text-primary";
     }
   };
 
@@ -59,6 +70,70 @@ export const LessonCard = memo(function LessonCard({
       });
     }
   };
+
+  if (variant === "list") {
+    return (
+      <Link 
+        href={isUnlocked ? `/lessons/${lesson.id}` : "#"} 
+        onClick={handleLockedClick}
+        className={`block group ${!isUnlocked ? "cursor-not-allowed" : ""}`}
+      >
+        <div className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-200 ${
+          isUnlocked 
+            ? "bg-card/50 border-white/5 hover:bg-card hover:border-primary/30" 
+            : "bg-card/30 border-white/5 opacity-60"
+        }`}>
+          {/* Left: Number/Status */}
+          <div className="flex-shrink-0 w-8 flex justify-center items-center">
+            {isCompleted ? (
+              <div className="w-6 h-6 rounded-full border-2 border-emerald-700 flex items-center justify-center text-[11px] font-bold text-emerald-700">
+                {lesson.lesson_number === 0 ? "Int" : `${lesson.lesson_number}`}
+              </div>
+            ) : !isUnlocked ? (
+              <Lock className="w-4 h-4 text-muted-foreground" />
+            ) : (
+              <span className="text-sm font-mono text-muted-foreground font-bold">
+                {lesson.lesson_number === 0 ? "Intro" : `${lesson.lesson_number}`}
+              </span>
+            )}
+          </div>
+
+          {/* Middle: Title */}
+          <div className="flex-grow min-w-0">
+            <h4 className={`text-base font-medium truncate ${isUnlocked ? "group-hover:text-primary" : "text-muted-foreground"}`}>
+              {lesson.title}
+            </h4>
+          </div>
+
+          {/* Right: Difficulty & Action */}
+          <div className="flex-shrink-0 flex items-center gap-4">
+            <span className={`hidden sm:block text-xs font-bold ${getDifficultyColor(lesson.difficulty)}`}>
+              {lesson.difficulty}
+            </span>
+            
+            <div className={`flex items-center gap-1 text-xs font-bold py-1.5 px-3 rounded-lg transition-colors ${
+              !isUnlocked 
+                ? "text-muted-foreground bg-secondary/50" 
+                : isCompleted
+                  ? "text-white bg-emerald-700 group-hover:bg-emerald-800"
+                  : "text-primary-foreground bg-primary group-hover:bg-primary/90"
+            }`}>
+              {!isUnlocked ? (
+                "Locked"
+              ) : isCompleted ? (
+                "Review"
+              ) : (
+                <>
+                  Learn
+                  <ArrowRight className="w-3 h-3" />
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      </Link>
+    );
+  }
 
   return (
     <Link 
@@ -78,7 +153,12 @@ export const LessonCard = memo(function LessonCard({
 
         <div className="flex justify-between items-start mb-4 relative z-10">
           <div
-            className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${getDifficultyColor(lesson.difficulty)}`}
+            className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider border ${
+              lesson.difficulty === "Beginner" ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20" :
+              lesson.difficulty === "Intermediate" ? "bg-warning/10 text-warning border-warning/20" :
+              lesson.difficulty === "Advanced" ? "bg-destructive/10 text-destructive border-destructive/20" :
+              "bg-primary/10 text-primary border-primary/20"
+            }`}
           >
             {lesson.difficulty}
           </div>

@@ -52,15 +52,21 @@ export default function CategoryDetail() {
           </div>
 
           {isLoadingLessons ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="bg-card h-48 rounded-3xl border border-white/5 animate-pulse" />
+            <div className="space-y-3">
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="bg-card h-16 rounded-xl border border-white/5 animate-pulse" />
               ))}
             </div>
           ) : lessons && lessons.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex flex-col gap-3">
               {lessons.map((lesson, idx) => (
-                <LessonCard key={lesson.id} lesson={lesson} index={idx} />
+                <LessonCard 
+                  key={lesson.id} 
+                  lesson={lesson} 
+                  index={idx} 
+                  variant="list" 
+                  categoryId={actualCategoryId} 
+                />
               ))}
             </div>
           ) : (

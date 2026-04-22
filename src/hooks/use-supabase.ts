@@ -9,7 +9,10 @@ export function useGetLessons() {
   return useQuery<Lesson[]>({
     queryKey: ["lessons"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("lessons").select("*");
+      const { data, error } = await supabase
+        .from("lessons")
+        .select("*")
+        .order("lesson_number", { ascending: true });
       if (error) throw error;
       return data as Lesson[];
     },
@@ -99,7 +102,7 @@ export function useGetLessonsByCategory(
         return [];
       }
 
-      const { data, error } = await query;
+      const { data, error } = await query.order("lesson_number", { ascending: true });
       if (error) throw error;
       return data as Lesson[];
     },

@@ -49,14 +49,17 @@ export function QuizSection({ lessonId, lessonCategory, lessonNumber, quiz }: Qu
       setIsSubmitted(false);
     } else {
       // Finished all questions
-      completeLessonStore(lessonId);
+      if (lessonCategory && typeof lessonNumber === 'number') {
+        completeLessonStore(lessonId, lessonCategory, lessonNumber);
+      } else {
+        completeLessonStore(lessonId, "unknown", 0);
+      }
       
       // Sync to Supabase if logged in
       if (user && supabaseStats) {
-        // Core lesson ID for legacy tracking (badges/stats)
-        let updatedList = Array.from(new Set([...supabaseStats.completed_lessons, lessonId]));
+        let updatedList = [...supabaseStats.completed_lessons];
         
-        // New formatted progress: "category: chapter X"
+        // Use formatted progress: "category:lessonNumber"
         if (lessonCategory && typeof lessonNumber === 'number') {
           updatedList = getUpdatedCompletedLessons(
             updatedList,

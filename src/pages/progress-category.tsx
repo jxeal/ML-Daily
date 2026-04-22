@@ -5,6 +5,7 @@ import { useStatsStore } from "@/store/use-stats";
 import { useAuth } from "@/components/auth/auth-provider";
 import { Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { Link, useRoute, useLocation } from "wouter";
+import { isLessonCompleted } from "@/lib/lesson-utils";
 
 export default function ProgressCategory() {
   const [, params] = useRoute("/progress/:id");
@@ -25,7 +26,9 @@ export default function ProgressCategory() {
   const localCompletedIds = useStatsStore(state => state.completedLessons);
   const completedIds = user ? (supabaseStats?.completed_lessons || []) : localCompletedIds;
 
-  const completedLessons = lessons?.filter(l => completedIds.includes(l.id)) || [];
+  const completedLessons = lessons?.filter(l => 
+    isLessonCompleted(l.id, l.lesson_number, actualCategoryId, completedIds)
+  ) || [];
 
   return (
     <AppLayout>

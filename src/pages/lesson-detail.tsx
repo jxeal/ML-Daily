@@ -1,5 +1,5 @@
 import { useRoute, Link, useLocation } from "wouter";
-import { useGetLessonById, useUserStats } from "@/hooks/use-supabase";
+import { useGetLessonById, useUserStats, useGetCategoryById } from "@/hooks/use-supabase";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkBreaks from "remark-breaks";
@@ -17,6 +17,9 @@ export default function LessonDetail() {
   const [, setLocation] = useLocation();
 
   const { data: lesson, isLoading, error } = useGetLessonById(id || "");
+  const { data: categoryData } = useGetCategoryById(lesson?.category || "");
+  const catIdToUse = categoryData?.id || lesson?.category || "";
+
   const { user } = useAuth();
   const { data: supabaseStats } = useUserStats();
   const localCompleted = useStatsStore(state => state.completedLessons);
@@ -25,7 +28,7 @@ export default function LessonDetail() {
 
   const isUnlocked = lesson ? isLessonUnlocked(
     lesson.lesson_number,
-    lesson.category,
+    catIdToUse,
     completedLessons,
     !!user
   ) : true;
@@ -95,7 +98,7 @@ export default function LessonDetail() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-                  {lesson.category}
+                  {lesson.lesson_number === 0 ? "Introduction" : `Lesson ${lesson.lesson_number}`}
                 </span>
                 <span className="text-xs font-bold text-muted-foreground bg-secondary px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                   {lesson.difficulty}
@@ -145,7 +148,7 @@ export default function LessonDetail() {
           {/* Quiz Section */}
           <QuizSection 
             lessonId={lesson.id} 
-            lessonCategory={lesson.category} 
+            lessonCategory={catIdToUse} 
             lessonNumber={lesson.lesson_number}
             quiz={lesson.quiz} 
           />

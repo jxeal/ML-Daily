@@ -12,7 +12,7 @@ export interface UserStatsState {
   
   // Actions
   recordVisit: () => void;
-  completeLesson: (lessonId: string) => void;
+  completeLesson: (lessonId: string, categoryId: string, lessonNumber: number) => void;
   completeDailyChallenge: (xpReward: number) => void;
 }
 
@@ -46,12 +46,38 @@ export const useStatsStore = create<UserStatsState>()(
         }
       },
 
-      completeLesson: (lessonId: string) => {
+      completeLesson: (lessonId, categoryId, lessonNumber) => {
         const { completedLessons, xp } = get();
-        if (!completedLessons.includes(lessonId)) {
+        
+        // Always try to update formatted progress
+        const categoryPrefix = `${categoryId}:`;
+        const existingEntryIndex = completedLessons.findIndex(entry => 
+          entry.startsWith(categoryPrefix)
+        );
+
+        const newFormattedEntry = `${categoryPrefix}${lessonNumber}`;
+        const newCompletedLessons = [...completedLessons];
+
+        let updated = false;
+
+        if (existingEntryIndex === -1) {
+          newCompletedLessons.push(newFormattedEntry);
+          updated = true;
+        } else {
+          const parts = newCompletedLessons[existingEntryIndex].split(":");
+          if (parts.length === 2) {
+            const lastNum = parseInt(parts[1], 10);
+            if (lessonNumber > lastNum) {
+              newCompletedLessons[existingEntryIndex] = newFormattedEntry;
+              updated = true;
+            }
+          }
+        }
+
+        if (updated) {
           set({ 
-            completedLessons: [...completedLessons, lessonId],
-            xp: xp + 10 // 10 XP per lesson
+            completedLessons: newCompletedLessons,
+            xp: xp + 10 
           });
         }
       },

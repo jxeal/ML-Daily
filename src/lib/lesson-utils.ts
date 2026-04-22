@@ -14,25 +14,56 @@ export function isLessonUnlocked(
   }
 
   // 2. Logged in:
-  // Format: "categoryID: chapter X"
+  // Format: "categoryNameOrID:lessonNumber"
   // If no entry found, allow only lesson_number 0
   // Allow till chapter_number_found + 1
 
   const categoryEntry = completedLessons.find(entry => 
-    entry.startsWith(`${category}: chapter `)
+    entry.startsWith(`${category}:`)
   );
 
   if (!categoryEntry) {
     return lessonNumber === 0;
   }
 
-  const match = categoryEntry.match(/chapter (\d+)/);
-  if (match) {
-    const lastCompletedChapter = parseInt(match[1], 10);
+  const parts = categoryEntry.split(":");
+  if (parts.length === 2) {
+    const lastCompletedChapter = parseInt(parts[1], 10);
     return lessonNumber <= lastCompletedChapter + 1;
   }
 
   return lessonNumber === 0;
+}
+
+/**
+ * Checks if a lesson is completed based on progress format "category:lessonNumber"
+ * or legacy UUID format.
+ */
+export function isLessonCompleted(
+  lessonId: string,
+  lessonNumber: number,
+  category: string,
+  completedLessons: string[]
+): boolean {
+  // Check legacy UUID format
+  if (completedLessons.includes(lessonId)) {
+    return true;
+  }
+
+  // Check new format "category:lessonNumber"
+  const categoryEntry = completedLessons.find(entry => 
+    entry.startsWith(`${category}:`)
+  );
+
+  if (categoryEntry) {
+    const parts = categoryEntry.split(":");
+    if (parts.length === 2) {
+      const lastCompletedChapter = parseInt(parts[1], 10);
+      return lessonNumber <= lastCompletedChapter;
+    }
+  }
+
+  return false;
 }
 
 /**
@@ -43,7 +74,7 @@ export function getUpdatedCompletedLessons(
   category: string,
   lessonNumber: number
 ): string[] {
-  const categoryPrefix = `${category}: chapter `;
+  const categoryPrefix = `${category}:`;
   const existingEntryIndex = completedLessons.findIndex(entry => 
     entry.startsWith(categoryPrefix)
   );
@@ -55,9 +86,9 @@ export function getUpdatedCompletedLessons(
   }
 
   const existingEntry = completedLessons[existingEntryIndex];
-  const match = existingEntry.match(/chapter (\d+)/);
-  if (match) {
-    const lastCompletedChapter = parseInt(match[1], 10);
+  const parts = existingEntry.split(":");
+  if (parts.length === 2) {
+    const lastCompletedChapter = parseInt(parts[1], 10);
     // Only update if the new lesson number is higher
     if (lessonNumber > lastCompletedChapter) {
       const newCompletedLessons = [...completedLessons];
