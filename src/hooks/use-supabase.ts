@@ -36,26 +36,45 @@ export function useGetCategories() {
   return useQuery<Category[]>({
     queryKey: ["categories"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("categories").select("*");
+      const { data, error } = await supabase
+        .from("categories")
+        .select("*")
+        .order("id", { ascending: true });
       if (error) throw error;
       return data as Category[];
     },
   });
 }
 
-export function useGetCategoryById(id: string) {
+export function useGetCategoryById(idOrName: string) {
   return useQuery<Category>({
-    queryKey: ["categories", id],
+    queryKey: ["categories", idOrName],
     queryFn: async () => {
-      const { data, error } = await supabase
+      // First try by ID
+      const { data: byId, error: errorId } = await supabase
         .from("categories")
         .select("*")
-        .eq("id", id)
-        .single();
-      if (error) throw error;
-      return data as Category;
+        .eq("id", idOrName)
+        .maybeSingle();
+
+      if (byId) return byId as Category;
+
+      // If not found by ID, try by name (convert slug back to name approximation or just direct match)
+      const nameMatch = idOrName.split("-").join(" ");
+      const { data: byName, error: errorName } = await supabase
+        .from("categories")
+        .select("*")
+        .ilike("name", nameMatch)
+        .maybeSingle();
+
+      if (byName) return byName as Category;
+      
+      if (errorId) throw errorId;
+      if (errorName) throw errorName;
+      
+      throw new Error("Category not found");
     },
-    enabled: !!id,
+    enabled: !!idOrName,
   });
 }
 

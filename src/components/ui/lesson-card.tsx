@@ -95,7 +95,7 @@ export const LessonCard = memo(function LessonCard({
             </div>
           ) : (
             <div className="text-muted-foreground bg-secondary px-2.5 py-1 rounded-full text-xs font-semibold">
-              {lesson.category}
+              {lesson.lesson_number === 0 ? "Introduction" : `Lesson ${lesson.lesson_number}`}
             </div>
           )}
         </div>

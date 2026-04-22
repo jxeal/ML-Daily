@@ -16,13 +16,13 @@ export default function Categories() {
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {[1, 2, 3, 4].map(i => (
               <div key={i} className="bg-card h-40 rounded-3xl border border-white/5 animate-pulse" />
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {categories?.map((cat, idx) => (
               <motion.div
                 key={cat.id}
@@ -30,7 +30,7 @@ export default function Categories() {
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: idx * 0.1, duration: 0.3 }}
               >
-                <Link href={`/categories/${cat.id}`} className="block group h-full">
+                <Link href={`/categories/${cat.name.toLowerCase().replace(/\s+/g, '-')}`} className="block group h-full">
                   <div className="bg-card p-6 rounded-3xl border border-white/5 h-full transition-all duration-300 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 hover:-translate-y-1 relative overflow-hidden flex flex-col">
                     
                     {/* Color splash */}

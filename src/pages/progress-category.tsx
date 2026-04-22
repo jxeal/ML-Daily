@@ -15,7 +15,10 @@ export default function ProgressCategory() {
   
   // Use the name from the category object if found, otherwise fallback to the ID from the URL
   const categoryName = category?.name || (!isLoadingCategory && !category ? categoryId : "");
-  const { data: lessons, isLoading: isLoadingLessons } = useGetLessonsByCategory(categoryName, categoryId);
+  // Use the actual ID from the database if we found the category
+  const actualCategoryId = category?.id || categoryId;
+  
+  const { data: lessons, isLoading: isLoadingLessons } = useGetLessonsByCategory(categoryName, actualCategoryId);
 
   const { user } = useAuth();
   const { data: supabaseStats } = useUserStats();

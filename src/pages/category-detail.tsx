@@ -12,9 +12,11 @@ export default function CategoryDetail() {
   const { data: category, isLoading: isLoadingCategory } = useGetCategoryById(categoryId);
   
   // Use the name from the category object if found, otherwise fallback to the ID from the URL
-  // (in case the ID is actually the name)
   const categoryName = category?.name || (!isLoadingCategory && !category ? categoryId : "");
-  const { data: lessons, isLoading: isLoadingLessons } = useGetLessonsByCategory(categoryName, categoryId);
+  // Use the actual ID from the database if we found the category
+  const actualCategoryId = category?.id || categoryId;
+  
+  const { data: lessons, isLoading: isLoadingLessons } = useGetLessonsByCategory(categoryName, actualCategoryId);
 
   return (
     <AppLayout>
