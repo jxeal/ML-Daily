@@ -8,7 +8,6 @@ import { AppLayout } from "@/components/layout/app-layout";
 import { QuizSection } from "@/components/ui/quiz-section";
 import { useAuth } from "@/components/auth/auth-provider";
 import { useStatsStore } from "@/store/use-stats";
-import { useEffect } from "react";
 import { isLessonUnlocked } from "@/lib/lesson-utils";
 
 export default function LessonDetail() {
@@ -197,6 +196,7 @@ export default function LessonDetail() {
           <QuizSection 
             lessonId={lesson.id} 
             lessonCategory={catIdToUse} 
+            categorySlug={categorySlug}
             lessonNumber={lesson.lesson_number}
             quiz={lesson.quiz} 
           />

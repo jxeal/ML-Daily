@@ -12,11 +12,12 @@ import { getUpdatedCompletedLessons } from '@/lib/lesson-utils';
 interface QuizSectionProps {
   lessonId: string;
   lessonCategory?: string;
+  categorySlug?: string;
   lessonNumber?: number;
   quiz: QuizQuestion[];
 }
 
-export function QuizSection({ lessonId, lessonCategory, lessonNumber, quiz }: QuizSectionProps) {
+export function QuizSection({ lessonId, lessonCategory, categorySlug, lessonNumber, quiz }: QuizSectionProps) {
   const { user } = useAuth();
   const { data: supabaseStats } = useUserStats();
   const updateStats = useUpdateUserStats();
@@ -104,7 +105,7 @@ export function QuizSection({ lessonId, lessonCategory, lessonNumber, quiz }: Qu
                 setCurrentIdx(0);
                 setSelectedId(null);
                 setIsSubmitted(false);
-                const nextSlug = (lessonCategory || "").toLowerCase().replace(/\s+/g, "-");
+                const nextSlug = (categorySlug || lessonCategory || "").toLowerCase().replace(/\s+/g, "-");
                 const nextNum = nextLesson.lesson_number === 0 ? "intro" : nextLesson.lesson_number;
                 setLocation(`/lessons/${nextSlug}/${nextNum}`);
               }}
@@ -115,7 +116,7 @@ export function QuizSection({ lessonId, lessonCategory, lessonNumber, quiz }: Qu
           )}
           
           <button 
-            onClick={() => setLocation(lessonCategory ? `/categories/${lessonCategory.toLowerCase().replace(/\s+/g, "-")}` : '/')}
+            onClick={() => setLocation((categorySlug || lessonCategory) ? `/categories/${(categorySlug || lessonCategory || "").toLowerCase().replace(/\s+/g, "-")}` : '/')}
             className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
