@@ -8,20 +8,20 @@ Use these prompts with an AI (like ChatGPT or Gemini) to generate SQL commands f
 **Prompt:**
 > Generate a PostgreSQL `INSERT` command for the `lessons` table. 
 > **Topic:** [INSERT TOPIC HERE]
-> **Category:** [Choose from: Statistics, Supervised Learning, Unsupervised Learning, Deep Learning]
+> **Category:** [Choose 1 for Machine Learning, 2 for Deep Learning]
 > **Difficulty:** [Choose from: Beginner, Intermediate, Advanced]
 > 
 > **Table Schema:**
 > - `id`: UUID (Generate a random UUID)
 > - `title`: TEXT
-> - `category`: TEXT (The UUID or Name of the category)
+> - `category`: Number (The Number mentioned in the category)
 > - `difficulty`: TEXT
 > - `lesson_number`: INTEGER (Sequence number starting from 0 for 'Introduction')
 > - `xp_reward`: INTEGER (Range: 20 for Beginner, 50 for Intermediate, 100 for Advanced)
 > - `short_description`: TEXT (1-2 sentences)
 > - `content`: TEXT (Detailed educational content in Markdown. Use `![align|Caption](url)` for images where `align` is `left`, `right`, or `center`. Format with bold section titles like **The Core Idea**. Do NOT use `##` or `---`.)
 > - `examples`: JSONB (Array of strings)
-> - `quiz`: JSONB (Array of objects: `{"question": string, "options": [{"id": "a", "text": "..."}, ...], "answer": "id"}`)
+> - `quiz`: JSONB (Array of objects: `{"question": string, "options": [{"id": "a", "text": "..."}, ...], "answer": "id"}`. Generate 5 questions for Beginner, 7-8 for Intermediate, and 10 for Advanced difficulty. Questions should cover all the parts mentioned in the content.)
 > 
 > **Output Format:**
 > Return ONLY the SQL command. Use `::jsonb` for JSON fields.
