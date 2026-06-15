@@ -19,6 +19,10 @@ import Badges from "@/pages/badges";
 import DailyChallenge from "@/pages/challenge";
 import CategoryDetail from "@/pages/category-detail";
 import NotFound from "@/pages/not-found";
+import About from "@/pages/about";
+import PrivacyPolicy from "@/pages/privacy";
+import TermsOfService from "@/pages/terms";
+import Contact from "@/pages/contact";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -44,6 +48,10 @@ function Router() {
       <Route path="/profile/:username/badges" component={Badges} />
       <Route path="/badges" component={Badges} />
       <Route path="/auth" component={Auth} />
+      <Route path="/about" component={About} />
+      <Route path="/privacy" component={PrivacyPolicy} />
+      <Route path="/terms" component={TermsOfService} />
+      <Route path="/contact" component={Contact} />
       <Route component={NotFound} />
     </Switch>
   );

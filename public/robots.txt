@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /$
+Allow: /about
+Allow: /contact
+Allow: /privacy
+Allow: /terms
+
+# Prevent scrapers and search engines from indexing the protected app
+Disallow: /profile/
+Disallow: /lessons/
+Disallow: /progress/
+Disallow: /api/

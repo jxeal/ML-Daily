@@ -62,8 +62,18 @@ export default function Profile({ params }: { params?: { username?: string } }) 
   }, [user, isPublicView, supabaseStats]);
 
   const handleShareProfile = async () => {
-    // Share using username if available, otherwise fallback to id
-    const shareId = user?.user_metadata?.username || user?.id || 'guest';
+     // Share using username
+    const shareId = supabaseStats?.username || user?.user_metadata?.username || username;
+    
+    if (!shareId) {
+      toast({
+        title: "Cannot share profile",
+        description: "Please set a username in your profile first.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     const profileUrl = `${window.location.origin}/profile/${shareId}`;
     
     try {
@@ -168,17 +178,17 @@ export default function Profile({ params }: { params?: { username?: string } }) 
     };
   }
 
-  const getBadgeIcon = (iconName: string, className: string = "w-6 h-6") => {
-    switch (iconName) {
-      case 'Flame': return <Flame className={`${className} text-orange-500`} />;
-      case 'BookOpen': return <BookOpen className={`${className} text-blue-500`} />;
-      case 'Zap': return <Zap className={`${className} text-yellow-500`} />;
-      case 'Star': return <Star className={`${className} text-yellow-400`} />;
-      case 'Trophy': return <Trophy className={`${className} text-yellow-600`} />;
-      case 'Target': return <Target className={`${className} text-red-500`} />;
-      default: return <Award className={`${className} text-accent`} />;
-    }
-  };
+  // const getBadgeIcon = (iconName: string, className: string = "w-6 h-6") => {
+  //   switch (iconName) {
+  //     case 'Flame': return <Flame className={`${className} text-orange-500`} />;
+  //     case 'BookOpen': return <BookOpen className={`${className} text-blue-500`} />;
+  //     case 'Zap': return <Zap className={`${className} text-yellow-500`} />;
+  //     case 'Star': return <Star className={`${className} text-yellow-400`} />;
+  //     case 'Trophy': return <Trophy className={`${className} text-yellow-600`} />;
+  //     case 'Target': return <Target className={`${className} text-red-500`} />;
+  //     default: return <Award className={`${className} text-accent`} />;
+  //   }
+  // };
 
   // Resolve badge details
   const resolvedBadges = stats.badges.slice().reverse().slice(0, 3).map((b: any) => {
@@ -262,7 +272,8 @@ export default function Profile({ params }: { params?: { username?: string } }) 
               {displayUser.avatar_url ? (
                 <img src={displayUser.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
               ) : (
-                <UserIcon className="w-10 h-10 text-muted-foreground" />
+                // <UserIcon className="w-10 h-10 text-muted-foreground" />
+                <>Image not found</>
               )}
             </div>
           </div>
@@ -345,13 +356,15 @@ export default function Profile({ params }: { params?: { username?: string } }) 
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ delay: idx * 0.1 }}
+                    onClick={() => setLocation(isPublicView ? `/profile/${params?.username}/badges` : '/badges')}
                     className="bg-card dark:bg-secondary/50 border border-border rounded-3xl p-6 flex flex-col items-center text-center gap-3 hover:bg-accent/5 dark:hover:bg-secondary/80 transition-colors shadow-sm"
                   >
                     <div className="w-14 h-14 rounded-full bg-muted dark:bg-card shadow-inner flex items-center justify-center border border-border/50 overflow-hidden">
                       {badge.image_url ? (
                         <img src={badge.image_url} alt={badge.name} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       ) : (
-                        getBadgeIcon(badge.icon_name)
+                        // getBadgeIcon(badge.icon_name)
+                        <></>
                       )}
                     </div>
                     <span className="font-bold text-sm">{badge.name}</span>

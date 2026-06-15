@@ -6,7 +6,7 @@ export function BottomNav() {
   const [isHome] = useRoute("/");
   const [isCategories] = useRoute("/categories");
   const [isProgress] = useRoute("/progress");
-  const [isProfile] = useRoute("/profile");
+  const [isProfile] = useRoute("/profile/:id");
 
   const navItems = [
     { href: "/", icon: Home, label: "Home", active: isHome },
@@ -16,14 +16,14 @@ export function BottomNav() {
   ];
 
   return (
-    <div className="fixed bottom-0 w-full z-50 px-4 pb-6 pt-2 bg-gradient-to-t from-background via-background/95 to-transparent pointer-events-none">
-      <nav className="mx-auto max-w-md bg-card/90 backdrop-blur-xl border border-white/10 rounded-3xl p-2 shadow-2xl pointer-events-auto flex items-center justify-between relative overflow-hidden">
+    <div className="fixed bottom-0 w-full z-50 px-4 pb-6 pt-2 pointer-events-none">
+      <nav className="mx-auto max-w-md bg-card/95 backdrop-blur-xl border border-border/50 shadow-[0_8px_30px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.4)] rounded-[24px] p-2 pointer-events-auto flex items-center justify-between relative overflow-hidden">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = item.active;
 
           return (
-            <Link key={item.href} href={item.href} className="relative z-10 flex-1 flex flex-col items-center justify-center p-2 rounded-2xl tap-highlight-transparent group">
+            <Link key={item.href} href={item.href} className="relative z-10 flex-1 flex flex-col items-center justify-center p-2 rounded-[16px] tap-highlight-transparent group">
               <div className="relative">
                 <Icon 
                   className={`w-6 h-6 transition-all duration-300 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} 

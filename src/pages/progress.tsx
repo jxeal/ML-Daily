@@ -7,16 +7,16 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { getCompletedCount, getCategoryCompletedCount } from "@/lib/lesson-utils";
-import { 
-  BarChart as ReBarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  ResponsiveContainer,
-  Cell
-} from "recharts";
+// import { 
+//   BarChart as ReBarChart, 
+//   Bar, 
+//   XAxis, 
+//   YAxis, 
+//   CartesianGrid, 
+//   Tooltip, 
+//   ResponsiveContainer,
+//   Cell
+// } from "recharts";
 
 export default function Progress() {
   const { user, loading: authLoading } = useAuth();
@@ -33,22 +33,30 @@ export default function Progress() {
   const xp = user ? (supabaseStats?.xp || 0) : useStatsStore.getState().xp;
   const streak = user ? (supabaseStats?.streak || 0) : useStatsStore.getState().streak;
   
-  const total = lessons?.length || 1;
-  const completedCount = getCompletedCount(completedIds);
-  const percent = Math.round((completedCount / total) * 100) || 0;
-
+  let calculatedTotal = 0;
+  let calculatedCompleted = 0;
+  
   // Calculate mastery by category
   const masteryData = categories?.map(cat => {
     // Note: We use cat.id as the definitive progress key
-    const catLessons = lessons?.filter(l => l.category === cat.name || l.category === cat.id) || [];
-    const catCompleted = getCategoryCompletedCount(cat.id, completedIds);
-    const catPercent = catLessons.length > 0 ? Math.round((catCompleted / catLessons.length) * 100) : 0;
+    const rawCatCompleted = getCategoryCompletedCount(cat.id, completedIds);
+    const catTotalLessons = cat.lesson_count || 0;
+    const catCompleted = Math.max(0, rawCatCompleted - 1);
+    
+    calculatedTotal += catTotalLessons;
+    calculatedCompleted += catCompleted;
+    
+    const catPercent = catTotalLessons > 0 ? Math.round((catCompleted / catTotalLessons) * 100) : 0;
     return {
       name: cat.name,
       percent: catPercent,
       color: cat.color || "#a855f7"
     };
   }) || [];
+
+  const total = categories ? Math.max(0, calculatedTotal) : Math.max(0, (lessons?.length || 1) - 1);
+  const completedCount = categories ? calculatedCompleted : Math.max(0, getCompletedCount(completedIds) - 1);
+  const percent = Math.round((completedCount / total) * 100) || 0;
 
   if (!user && !authLoading) {
     return (
@@ -142,9 +150,10 @@ export default function Progress() {
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {categories?.map((cat) => {
-              const catLessons = lessons?.filter(l => l.category === cat.name || l.category === cat.id) || [];
-              const catCompleted = getCategoryCompletedCount(cat.id, completedIds);
-              const catPercent = catLessons.length > 0 ? Math.round((catCompleted / catLessons.length) * 100) : 0;
+              const rawCatCompleted = getCategoryCompletedCount(cat.id, completedIds);
+              const catTotalLessons = cat.lesson_count;
+              const catCompleted = Math.max(0, rawCatCompleted - 1);
+              const catPercent = catTotalLessons > 0 ? Math.round((catCompleted / catTotalLessons) * 100) : 0;
               
               return (
                 <motion.div 
@@ -165,7 +174,7 @@ export default function Progress() {
                       <div>
                         <h4 className="font-bold text-sm leading-none mb-1">{cat.name}</h4>
                         <p className="text-xs text-muted-foreground">
-                          {catCompleted} of {catLessons.length} lessons
+                          {catCompleted} of {catTotalLessons} lessons
                         </p>
                       </div>
                     </div>
@@ -253,7 +262,7 @@ export default function Progress() {
                       className="p-4 rounded-2xl bg-card border border-white/5 shadow-sm hover:border-primary/50 transition-all cursor-pointer flex flex-col justify-center active:scale-95"
                       onClick={() => setLocation(`/progress/${categorySlug}`)}
                     >
-                      <div className="text-xs font-bold text-emerald-400 mb-1">{lessonCount} {lessonCount === 1 ? 'Lesson' : 'Lessons'} Completed</div>
+                      <div className="text-xs font-bold text-emerald-400 mb-1">{lessonCount-1} {lessonCount === 2 ? 'Lesson' : 'Lessons'} Completed</div>
                       <h4 className="font-bold text-lg">{cat.name}</h4>
                     </div>
                   );
